@@ -394,11 +394,11 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'agentflow-studio',
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<AppState>
-        if (version < 3) {
-          const s = state.settings ?? {
+        if (version < 4) {
+          const defaults = {
             gateway: 'http://hermes-agent:9119',
             hermesApi: 'http://hermes-agent:8642',
             ollamaHost: 'http://host.docker.internal:11434',
@@ -408,16 +408,17 @@ export const useAppStore = create<AppState>()(
             parallelAgents: 5,
             governance: { requireApproval: true, logReasoning: true, autoSaveDrafts: false }
           }
-          if (!s.hermesApi || s.hermesApi === 'http://127.0.0.1:8642' || s.hermesApi === 'https://hermes-gateway.local') {
+          const s = { ...defaults, ...(state.settings || {}) } as Settings
+          if (!s.hermesApi || s.hermesApi.includes('127.0.0.1:8642') || s.hermesApi === 'https://hermes-gateway.local') {
             s.hermesApi = 'http://hermes-agent:8642'
           }
-          if (!s.gateway || s.gateway === 'https://hermes-gateway.local') {
+          if (!s.gateway || s.gateway.includes('127.0.0.1:9119') || s.gateway === 'https://hermes-gateway.local') {
             s.gateway = 'http://hermes-agent:9119'
           }
-          if (!s.ollamaHost || s.ollamaHost === 'http://127.0.0.1:11434' || s.ollamaHost === 'http://127.0.0.1:11434/') {
+          if (!s.ollamaHost || s.ollamaHost.includes('127.0.0.1:11434') || s.ollamaHost.includes('localhost:11434')) {
             s.ollamaHost = 'http://host.docker.internal:11434'
           }
-          state.settings = s as Settings
+          state.settings = s
         }
         return state as AppState
       },
