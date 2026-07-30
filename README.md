@@ -126,40 +126,40 @@ flowchart TD
 
 ## Screenshots
 
-> Place captured screenshots in `assets/screenshots/` and update the paths below.
+> Replace the placeholder SVGs in `assets/screenshots/` with real PNG captures when you have them.
 
 ### Dashboard
-![Dashboard](assets/screenshots/dashboard.png)
+![Dashboard](assets/screenshots/dashboard.svg)
 
 ### Agents
-![Agents](assets/screenshots/agents.png)
+![Agents](assets/screenshots/agents.svg)
 
 ### Workflows
-![Workflows](assets/screenshots/workflows.png)
+![Workflows](assets/screenshots/workflows.svg)
 
 ### Tasks
-![Tasks](assets/screenshots/tasks.png)
+![Tasks](assets/screenshots/tasks.svg)
 
 ### Approvals
-![Approvals](assets/screenshots/approvals.png)
+![Approvals](assets/screenshots/approvals.svg)
 
 ### Automation
-![Automation](assets/screenshots/automation.png)
+![Automation](assets/screenshots/automation.svg)
 
 ### Monitor
-![Monitor](assets/screenshots/monitor.png)
+![Monitor](assets/screenshots/monitor.svg)
 
 ### Chat Test
-![Chat Test](assets/screenshots/chat-test.png)
+![Chat Test](assets/screenshots/chat-test.svg)
 
 ### Settings
-![Settings](assets/screenshots/settings.png)
+![Settings](assets/screenshots/settings.svg)
 
 ### Logs
-![Logs](assets/screenshots/logs.png)
+![Logs](assets/screenshots/logs.svg)
 
 ### Mobile Companion
-![Mobile Companion](assets/screenshots/mobile.png)
+![Mobile Companion](assets/screenshots/mobile.svg)
 
 ---
 
