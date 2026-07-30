@@ -71,6 +71,10 @@ export const api = {
     fetchJson<{ status: number; body: string }>('/chat', { method: 'POST', body: JSON.stringify(payload) }),
 
   // Ollama chat
-  ollama: (payload: { message: string; model?: string }) =>
+  ollama: (payload: { message: string; model?: string; host?: string }) =>
     fetchJson<{ status: number; body: string }>('/ollama', { method: 'POST', body: JSON.stringify(payload) }),
+
+  // Connection test
+  testConnection: (payload: { url: string }) =>
+    fetchJson<{ reachable: boolean; status?: number; error?: string }>('/test', { method: 'POST', body: JSON.stringify(payload) }),
 }

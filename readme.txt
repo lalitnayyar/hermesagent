@@ -24,9 +24,12 @@ Updated Features
 ----------------
 1. Workflow designer improvements
    - Add new workflow blocks from the top toolbar or by dragging from the
-     Block Widget (Start, Agent, Action, Decision, Tool, End).
+     Block Widget (Start, Agent, Action, Decision, Tool, Output, End).
    - Select a block to edit its label, icon (Material Symbols name), color
      (primary / secondary / tertiary), and shape (rounded / diamond) in real time.
+   - Tool blocks have a Tool name and a Code / command field.
+   - Output blocks display the result of a workflow test run.
+   - Run a workflow to trace the flow and see test output.
    - Delete selected blocks (removes attached edges automatically).
    - Save drag/edge changes with the Save button.
    - Create, publish, and delete workflows from the sidebar.
@@ -35,7 +38,7 @@ Updated Features
 2. Chat Test with Ollama
    - Added an Ollama-powered chat test page (`/chat-test`).
    - Backend endpoint: `POST /api/ollama`.
-   - Configurable model; defaults to the local Ollama endpoint.
+   - Configurable Ollama host and model; uses the host from Settings by default.
 
 3. Hermes agent / gateway integration
    - `manage.sh start-hermes` starts the Hermes Agent/Gateway container.
@@ -88,7 +91,9 @@ Application Functionality
   feed.
 - Mobile (`/mobile`) - mobile companion for approvals, active tasks, quick
   actions.
-- Settings (`/settings`) - persisted gateway, limits, and governance toggles.
+- Settings (`/settings`) - persisted gateway, Ollama host, limits, and
+  governance toggles. Each URL has a Test button to verify reachability before
+  saving.
 - Chat Test (`/chat-test`) - test Ollama chat locally.
 
 

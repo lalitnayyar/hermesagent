@@ -1,20 +1,27 @@
+import os
+
 import httpx
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api")
 
 
+def _default_ollama_host() -> str:
+    return os.getenv("OLLAMA_HOST", "http://host.docker.internal:11434")
+
+
 @router.post("/ollama")
 def ollama(payload: dict) -> dict:
     prompt = payload.get("message", "")
     model = payload.get("model", "gemma4:cloud")
+    host = payload.get("host") or _default_ollama_host()
     if not prompt:
         raise HTTPException(status_code=400, detail="message is required")
 
     try:
         with httpx.Client(timeout=120, verify=False) as client:
             resp = client.post(
-                "http://127.0.0.1:11434/api/generate",
+                f"{host}/api/generate",
                 json={"model": model, "prompt": prompt, "stream": False},
             )
             data = resp.json()

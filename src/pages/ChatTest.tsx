@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
+import { useAppStore } from '@/lib/store'
 
 export default function ChatTest() {
+  const { settings } = useAppStore()
   const [message, setMessage] = useState('capital of india')
-  const [gateway, setGateway] = useState('http://127.0.0.1:3000')
+  const [gateway, setGateway] = useState(settings.gateway || 'http://127.0.0.1:3000')
   const [endpoint, setEndpoint] = useState('/chat')
+  const [ollamaHost, setOllamaHost] = useState(settings.ollamaHost || 'http://127.0.0.1:11434')
   const [model, setModel] = useState('gemma4:cloud')
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,7 +30,7 @@ export default function ChatTest() {
     setLoading(true)
     setResult('')
     try {
-      const data = await api.ollama({ message, model })
+      const data = await api.ollama({ message, model, host: ollamaHost })
       setResult(`Status: ${data.status}\n\n${data.body}`)
     } catch (err: any) {
       setResult(`Error: ${err.message}`)
@@ -37,7 +40,7 @@ export default function ChatTest() {
   }
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-md max-w-5xl">
       <h2 className="font-headline-md text-headline-md text-on-surface">Hermes / Ollama Chat Test</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
         <div className="space-y-sm">
@@ -70,6 +73,13 @@ export default function ChatTest() {
           />
         </div>
         <div className="space-y-sm">
+          <label className="text-label-sm text-on-surface-variant">Ollama Host</label>
+          <input
+            type="text"
+            value={ollamaHost}
+            onChange={(e) => setOllamaHost(e.target.value)}
+            className="w-full bg-surface-container-high border border-outline-variant rounded-lg px-md py-sm text-on-surface"
+          />
           <label className="text-label-sm text-on-surface-variant">Ollama Model</label>
           <input
             type="text"

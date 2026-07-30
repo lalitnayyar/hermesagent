@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, addEdge, useReactFlow, ReactFlowProvider, type Node, type Edge, type Connection, Handle, Position } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useAppStore, domains } from '@/lib/store'
@@ -10,6 +10,9 @@ interface WorkflowNodeData {
   icon: string
   color: string
   shape?: string
+  tool?: string
+  code?: string
+  output?: string
 }
 
 type BlockTemplate = {
@@ -25,6 +28,7 @@ const BLOCKS: BlockTemplate[] = [
   { label: 'Action', icon: 'bolt', color: 'secondary', shape: 'rounded' },
   { label: 'Decision', icon: 'question_mark', color: 'tertiary', shape: 'diamond' },
   { label: 'Tool', icon: 'build', color: 'tertiary', shape: 'rounded' },
+  { label: 'Output', icon: 'output', color: 'primary', shape: 'rounded' },
   { label: 'End', icon: 'flag', color: 'primary', shape: 'rounded' }
 ]
 
@@ -35,6 +39,7 @@ const WorkflowNode = ({ id, data }: { id: string; data: Record<string, unknown> 
   const d = data as unknown as WorkflowNodeData
   const setSelected = useAppStore((s) => s.setSelectedWorkflowNodeId)
   const isDiamond = d.shape === 'diamond'
+  const hasOutput = d.output !== undefined
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -45,8 +50,8 @@ const WorkflowNode = ({ id, data }: { id: string; data: Record<string, unknown> 
     <div
       onClick={handleClick}
       className={cn(
-        'relative flex items-center justify-center shadow-lg hover:border-primary/40 transition-colors cursor-pointer',
-        isDiamond ? 'w-32 h-32' : 'bg-surface-container border border-outline-variant rounded-lg px-3 py-2 min-w-[140px]'
+        'relative flex flex-col items-center justify-center shadow-lg hover:border-primary/40 transition-colors cursor-pointer',
+        isDiamond ? 'w-32 h-32' : 'bg-surface-container border border-outline-variant rounded-lg px-3 py-2 min-w-[140px] max-w-[200px]'
       )}
     >
       {isDiamond ? (
@@ -63,10 +68,20 @@ const WorkflowNode = ({ id, data }: { id: string; data: Record<string, unknown> 
       ) : (
         <>
           <Handle type="target" position={Position.Left} className="!bg-primary !w-2 !h-2" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full">
             <span className={cn('material-symbols-outlined', colorClass(d.color))}>{d.icon}</span>
-            <span className="text-xs font-semibold text-on-surface">{d.label}</span>
+            <span className="text-xs font-semibold text-on-surface truncate flex-1">{d.label}</span>
           </div>
+          {d.tool && (
+            <span className="text-[9px] text-on-surface-variant w-full truncate mt-1" title={d.tool}>
+              {d.tool}
+            </span>
+          )}
+          {hasOutput && d.output && (
+            <pre className="text-[9px] text-on-surface-variant w-full mt-1 whitespace-pre-wrap max-h-16 overflow-auto border-t border-outline-variant/30 pt-1" title={d.output}>
+              {d.output}
+            </pre>
+          )}
           <Handle type="source" position={Position.Right} className="!bg-primary !w-2 !h-2" />
         </>
       )}
@@ -148,11 +163,11 @@ export default function Workflows() {
   const [selectedId, setSelectedId] = useState<string>(workflows[0]?.id ?? '')
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
+  const [testOutput, setTestOutput] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [newName, setNewName] = useState('')
   const [newDomain, setNewDomain] = useState(domains[0])
   const [nodeLabel, setNodeLabel] = useState('')
-  const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
   const selected = workflows.find((w) => w.id === selectedId) ?? workflows[0]
   const selectedNode = nodes.find((n) => n.id === selectedWorkflowNodeId)
@@ -162,6 +177,7 @@ export default function Workflows() {
       setNodes(selected.nodes)
       setEdges(selected.edges)
       setSelectedWorkflowNodeId(null)
+      setTestOutput('')
     }
   }, [selected?.id, setNodes, setEdges, setSelectedWorkflowNodeId])
 
@@ -218,7 +234,15 @@ export default function Workflows() {
 
   const onDropNode = (block: BlockTemplate, position: { x: number; y: number }) => {
     if (!selected) return
-    const newNode = createNode({ label: block.label, icon: block.icon, color: block.color, shape: block.shape }, position)
+    const base: WorkflowNodeData = { label: block.label, icon: block.icon, color: block.color, shape: block.shape }
+    if (block.label === 'Tool') {
+      base.tool = ''
+      base.code = ''
+    }
+    if (block.label === 'Output') {
+      base.output = ''
+    }
+    const newNode = createNode(base, position)
     const nextNodes = [...nodes, newNode]
     setNodes(nextNodes)
     updateWorkflowNodes(selected.id, nextNodes)
@@ -252,6 +276,75 @@ export default function Workflows() {
     event.dataTransfer.setData('application/reactflow', JSON.stringify(block))
     event.dataTransfer.effectAllowed = 'move'
   }
+
+  const runWorkflow = () => {
+    if (!selected || nodes.length === 0) return
+    const adj: Record<string, string[]> = {}
+    edges.forEach((e) => {
+      adj[e.source] = adj[e.source] || []
+      adj[e.source].push(e.target)
+    })
+
+    const starts = nodes.filter((n) => {
+      const d = n.data as unknown as WorkflowNodeData
+      return d.icon === 'play_arrow' || d.label === 'Start'
+    })
+    if (starts.length === 0) {
+      toast('Workflow needs a Start block to run', 'warning')
+      return
+    }
+
+    const visited = new Set<string>()
+    const traces: string[] = []
+
+    const traverse = (id: string, path: string[]) => {
+      if (visited.has(id)) {
+        traces.push([...path, '...(cycle)'].join(' → '))
+        return
+      }
+      visited.add(id)
+      const n = nodes.find((x) => x.id === id)
+      if (!n) return
+      const d = n.data as unknown as WorkflowNodeData
+      let line = d.label
+      if (d.tool) {
+        line = `Tool: ${d.tool}`
+      }
+      if (d.code) {
+        line += ` | ${d.code}`
+      }
+      const newPath = [...path, line]
+      const next = adj[id] || []
+      const isEnd = d.icon === 'flag' || d.label === 'End' || d.icon === 'output' || d.label === 'Output'
+      if (next.length === 0 || isEnd) {
+        traces.push(newPath.join(' → '))
+        return
+      }
+      next.forEach((t) => traverse(t, newPath))
+    }
+
+    starts.forEach((s) => {
+      visited.clear()
+      traverse(s.id, [])
+    })
+
+    const out = traces.join('\n---\n')
+    setTestOutput(out)
+
+    const nextNodes = nodes.map((n) => {
+      const d = n.data as unknown as WorkflowNodeData
+      if (d.icon === 'output' || d.label === 'Output') {
+        return { ...n, data: { ...d, output: out } as unknown as Record<string, unknown> } as Node
+      }
+      return n
+    }) as Node[]
+    setNodes(nextNodes)
+    updateWorkflowNodes(selected.id, nextNodes)
+    toast('Workflow test run completed', 'success')
+  }
+
+  const d = selectedNode ? (selectedNode.data as unknown as WorkflowNodeData) : null
+  const isTool = d?.icon === 'build' || d?.label === 'Tool' || d?.tool !== undefined
 
   return (
     <div className="flex flex-col lg:flex-row gap-md h-[calc(100vh-8rem)]">
@@ -302,21 +395,21 @@ export default function Workflows() {
           <div className="flex items-center gap-xs flex-wrap">
             {selectedNode ? (
               <>
-                <div className="flex items-center bg-surface-container border border-outline-variant rounded-lg px-md py-1.5 gap-sm">
+                <div className="flex flex-wrap items-center bg-surface-container border border-outline-variant rounded-lg px-md py-1.5 gap-sm max-w-[60vw]">
                   <input
-                    value={(selectedNode.data as unknown as WorkflowNodeData)?.label ?? ''}
+                    value={d?.label ?? ''}
                     onChange={(e) => updateSelectedNode({ label: e.target.value })}
                     placeholder="Block label"
                     className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-28"
                   />
                   <input
-                    value={(selectedNode.data as unknown as WorkflowNodeData)?.icon ?? ''}
+                    value={d?.icon ?? ''}
                     onChange={(e) => updateSelectedNode({ icon: e.target.value })}
                     placeholder="Icon"
                     className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-20"
                   />
                   <select
-                    value={(selectedNode.data as unknown as WorkflowNodeData)?.color ?? 'primary'}
+                    value={d?.color ?? 'primary'}
                     onChange={(e) => updateSelectedNode({ color: e.target.value })}
                     className="bg-surface-container-high text-body-sm text-on-surface rounded px-sm py-0.5"
                   >
@@ -325,13 +418,29 @@ export default function Workflows() {
                     <option value="tertiary">tertiary</option>
                   </select>
                   <select
-                    value={(selectedNode.data as unknown as WorkflowNodeData)?.shape ?? 'rounded'}
+                    value={d?.shape ?? 'rounded'}
                     onChange={(e) => updateSelectedNode({ shape: e.target.value })}
                     className="bg-surface-container-high text-body-sm text-on-surface rounded px-sm py-0.5"
                   >
                     <option value="rounded">rounded</option>
                     <option value="diamond">diamond</option>
                   </select>
+                  {isTool && (
+                    <>
+                      <input
+                        value={d?.tool ?? ''}
+                        onChange={(e) => updateSelectedNode({ tool: e.target.value })}
+                        placeholder="Tool name"
+                        className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-32"
+                      />
+                      <input
+                        value={d?.code ?? ''}
+                        onChange={(e) => updateSelectedNode({ code: e.target.value })}
+                        placeholder="Code to execute"
+                        className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-40"
+                      />
+                    </>
+                  )}
                 </div>
                 <button onClick={deleteSelectedNode} className="p-sm hover:bg-error-container hover:text-on-error-container rounded-full text-on-surface-variant transition-colors">
                   <span className="material-symbols-outlined text-[20px]">delete</span>
@@ -346,6 +455,10 @@ export default function Workflows() {
                 <button onClick={addNode} disabled={!nodeLabel.trim()} className="text-primary disabled:text-outline font-label-xs text-label-xs uppercase font-bold ml-sm">Add</button>
               </div>
             )}
+            <button onClick={runWorkflow} className="flex items-center gap-sm px-md py-sm bg-tertiary text-on-tertiary rounded-full font-semibold transition-all">
+              <span className="material-symbols-outlined text-[18px]">play_arrow</span>
+              <span className="font-label-xs text-label-xs uppercase hidden sm:inline">Run</span>
+            </button>
             <button onClick={handleSave} className="flex items-center gap-sm px-md py-sm bg-surface-container hover:bg-surface-variant border border-outline-variant rounded-full text-on-surface-variant hover:text-on-surface transition-colors">
               <span className="material-symbols-outlined text-[18px]">save</span>
               <span className="font-label-xs text-label-xs uppercase hidden sm:inline">Save</span>
@@ -365,7 +478,7 @@ export default function Workflows() {
             </button>
           </div>
         </div>
-        <div ref={reactFlowWrapper} className="relative flex-1">
+        <div className="relative flex-1">
           {selected ? (
             <ReactFlowProvider>
               <FlowCanvas
@@ -384,6 +497,15 @@ export default function Workflows() {
             </div>
           )}
         </div>
+        {testOutput && (
+          <div className="p-md border-t border-outline-variant bg-surface-container-low z-10 max-h-48 overflow-auto">
+            <div className="flex items-center justify-between mb-xs">
+              <h4 className="font-label-xs text-label-xs text-outline uppercase tracking-widest">Test Run Output</h4>
+              <button onClick={() => setTestOutput('')} className="text-on-surface-variant hover:text-on-surface material-symbols-outlined text-[18px]">close</button>
+            </div>
+            <pre className="text-body-sm text-on-surface whitespace-pre-wrap">{testOutput}</pre>
+          </div>
+        )}
       </section>
 
       <aside className="w-full lg:w-56 shrink-0 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col overflow-hidden">

@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { useAppStore, type Settings as AppSettings } from '@/lib/store'
 import { cn } from '@/lib/utils'
+import { api } from '@/lib/api'
 
 export default function Settings() {
   const { settings, updateSettings, toast } = useAppStore()
+  const [testResult, setTestResult] = useState('')
+  const [testing, setTesting] = useState(false)
 
   const updateField = <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
     updateSettings({ [field]: value })
@@ -17,12 +21,28 @@ export default function Settings() {
   const reset = () => {
     updateSettings({
       gateway: 'https://hermes-gateway.local',
+      ollamaHost: 'http://127.0.0.1:11434',
       mode: 'enhanced',
       maxRetries: 3,
       timeout: 30,
       parallelAgents: 5,
       governance: { requireApproval: true, logReasoning: true, autoSaveDrafts: false }
     })
+  }
+
+  const runTest = async (url: string, label: string) => {
+    setTesting(true)
+    setTestResult('')
+    try {
+      const data = await api.testConnection({ url })
+      setTestResult(`${label}: ${data.reachable ? 'reachable' : 'not reachable'} (status ${data.status ?? data.error})`)
+      toast(`${label} test complete`, data.reachable ? 'success' : 'warning')
+    } catch (err: any) {
+      setTestResult(`${label}: error - ${err.message}`)
+      toast(`${label} test failed`, 'warning')
+    } finally {
+      setTesting(false)
+    }
   }
 
   return (
@@ -41,12 +61,21 @@ export default function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
             <div className="space-y-sm">
               <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Gateway URL</label>
-              <input
-                value={settings.gateway}
-                onChange={(e) => updateField('gateway', e.target.value)}
-                className="w-full bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                type="text"
-              />
+              <div className="flex gap-sm">
+                <input
+                  value={settings.gateway}
+                  onChange={(e) => updateField('gateway', e.target.value)}
+                  className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  type="text"
+                />
+                <button
+                  onClick={() => runTest(settings.gateway, 'Gateway')}
+                  disabled={testing || !settings.gateway}
+                  className="px-md py-sm bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-semibold disabled:opacity-50"
+                >
+                  Test
+                </button>
+              </div>
             </div>
             <div className="space-y-sm">
               <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Connection Mode</label>
@@ -59,6 +88,33 @@ export default function Settings() {
                 <option value="enhanced">Enhanced Gateway</option>
                 <option value="offline">Offline / Local</option>
               </select>
+            </div>
+          </div>
+        </section>
+
+        <hr className="border-outline-variant/30" />
+
+        <section className="space-y-md">
+          <h3 className="font-headline-sm text-headline-sm flex items-center gap-sm">
+            <span className="material-symbols-outlined text-secondary">memory</span>
+            Ollama
+          </h3>
+          <div className="space-y-sm">
+            <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Ollama Host</label>
+            <div className="flex gap-sm">
+              <input
+                value={settings.ollamaHost}
+                onChange={(e) => updateField('ollamaHost', e.target.value)}
+                className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                type="text"
+              />
+              <button
+                onClick={() => runTest(`${settings.ollamaHost}/api/tags`, 'Ollama')}
+                disabled={testing || !settings.ollamaHost}
+                className="px-md py-sm bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-semibold disabled:opacity-50"
+              >
+                Test
+              </button>
             </div>
           </div>
         </section>
@@ -110,6 +166,12 @@ export default function Settings() {
             ))}
           </div>
         </section>
+
+        {testResult && (
+          <div className="p-md bg-surface-container border border-outline-variant rounded-lg">
+            <span className="text-body-sm text-on-surface">{testResult}</span>
+          </div>
+        )}
 
         <div className="flex justify-end gap-sm pt-md border-t border-outline-variant/30">
           <button onClick={reset} className="px-lg py-sm rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface transition-colors font-semibold">Reset</button>
