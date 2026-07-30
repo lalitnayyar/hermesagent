@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     hermes_gateway_url: str = "http://hermes-agent:9119"
     hermes_workspace_url: str = "http://hermes-workspace:3000"
     hermes_api_server_key: str = ""
+    hermes_dashboard_username: str = ""
+    hermes_dashboard_password: str = ""
     hermes_default_profile: str = "default"
     hermes_request_timeout: int = 300
     hermes_streaming_enabled: bool = True
