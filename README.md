@@ -27,8 +27,9 @@ A modern, responsive web application for the **Hermes AgentFlow Studio** multi-a
 - **Monitor** — live throughput chart, service health toggle, and activity feed.
 - **Mobile** — mobile companion for approvals, active tasks, and quick actions.
 - **Chat Test** — test `Send to Hermes` and `Ask Ollama` from the UI.
-- **Settings** — persisted Hermes API/Gateway, Ollama host, limits, and
-  governance toggles, each with a **Test** button for reachability/response.
+- **Settings** — persisted Hermes API/Gateway, Hermes username/password,
+  Ollama host, limits, and governance toggles, each with a **Test** button for
+  reachability/response.
 - **Activity Logs** (`/logs`) — filtered, chronological list of all application
   events.
 

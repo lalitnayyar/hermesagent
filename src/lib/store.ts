@@ -61,6 +61,8 @@ export interface Schedule {
 export interface Settings {
   gateway: string
   hermesApi: string
+  hermesUsername: string
+  hermesPassword: string
   ollamaHost: string
   mode: 'gateway' | 'enhanced' | 'offline'
   maxRetries: number
@@ -212,6 +214,8 @@ export const useAppStore = create<AppState>()(
       settings: {
         gateway: 'http://hermes-agent:9119',
         hermesApi: 'http://hermes-agent:8642',
+        hermesUsername: '',
+        hermesPassword: '',
         ollamaHost: 'http://host.docker.internal:11434',
         mode: 'enhanced',
         maxRetries: 3,
@@ -394,13 +398,15 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'agentflow-studio',
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<AppState>
-        if (version < 4) {
+        if (version < 5) {
           const defaults = {
             gateway: 'http://hermes-agent:9119',
             hermesApi: 'http://hermes-agent:8642',
+            hermesUsername: '',
+            hermesPassword: '',
             ollamaHost: 'http://host.docker.internal:11434',
             mode: 'enhanced',
             maxRetries: 3,

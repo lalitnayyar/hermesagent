@@ -67,7 +67,7 @@ export const api = {
   streamEvents: (runId: string) => new EventSource(`/api/run/${runId}/events`),
 
   // Chat test
-  chat: (payload: { message: string; gateway?: string; endpoint?: string }) =>
+  chat: (payload: { message: string; gateway?: string; endpoint?: string; username?: string; password?: string }) =>
     fetchJson<{ status: number; body: string }>('/chat', { method: 'POST', body: JSON.stringify(payload) }),
 
   // Ollama chat

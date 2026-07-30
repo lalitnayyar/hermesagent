@@ -23,6 +23,8 @@ export default function Settings() {
     updateSettings({
       gateway: 'http://hermes-agent:9119',
       hermesApi: 'http://hermes-agent:8642',
+      hermesUsername: '',
+      hermesPassword: '',
       ollamaHost: 'http://host.docker.internal:11434',
       mode: 'enhanced',
       maxRetries: 3,
@@ -98,6 +100,26 @@ export default function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
             {urlField('Hermes API URL', 'hermesApi', '/health', 'Hermes API')}
             {urlField('Hermes Gateway URL', 'gateway', '/health', 'Hermes Gateway')}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <div className="space-y-sm">
+              <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Hermes Username</label>
+              <input
+                value={settings.hermesUsername}
+                onChange={(e) => updateField('hermesUsername', e.target.value)}
+                className="w-full bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary outline-none"
+                type="text"
+              />
+            </div>
+            <div className="space-y-sm">
+              <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Hermes Password</label>
+              <input
+                value={settings.hermesPassword}
+                onChange={(e) => updateField('hermesPassword', e.target.value)}
+                className="w-full bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary outline-none"
+                type="password"
+              />
+            </div>
           </div>
           <div className="space-y-sm">
             <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Connection Mode</label>

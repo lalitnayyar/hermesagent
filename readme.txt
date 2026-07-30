@@ -35,7 +35,8 @@ Features
    - Backend normalizes localhost/127.0.0.1 to Docker-friendly addresses.
 
 3. Settings
-   - Persisted Hermes API URL, Hermes Gateway URL, and Ollama host.
+   - Persisted Hermes API URL, Hermes Gateway URL, Hermes username/password,
+     and Ollama host.
    - Each URL has a Test button that verifies reachability and shows response.
    - Defaults/limits and governance toggles.
 

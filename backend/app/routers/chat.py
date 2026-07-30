@@ -36,10 +36,13 @@ def chat(payload: dict) -> dict:
         raise HTTPException(status_code=400, detail="message is required")
 
     url = f"{gateway}/{endpoint}"
+    username = payload.get("username") or settings.hermes_dashboard_username
+    password = payload.get("password") or settings.hermes_dashboard_password
+
     auth = None
     headers = {}
-    if settings.hermes_dashboard_username and settings.hermes_dashboard_password and "9119" in gateway:
-        auth = httpx.BasicAuth(settings.hermes_dashboard_username, settings.hermes_dashboard_password)
+    if username and password and "9119" in gateway:
+        auth = httpx.BasicAuth(username, password)
     elif settings.hermes_api_server_key:
         headers["Authorization"] = f"Bearer {settings.hermes_api_server_key}"
 

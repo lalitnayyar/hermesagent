@@ -17,7 +17,13 @@ export default function ChatTest() {
     setLoading(true)
     setResult('')
     try {
-      const data = await api.chat({ message, gateway, endpoint })
+      const data = await api.chat({
+        message,
+        gateway,
+        endpoint,
+        username: settings.hermesUsername,
+        password: settings.hermesPassword
+      })
       setResult(`Status: ${data.status}\n\n${data.body}`)
     } catch (err: any) {
       setResult(`Error: ${err.message}`)
