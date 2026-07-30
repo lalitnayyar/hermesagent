@@ -1,0 +1,20 @@
+# WSL / OS
+.DS_Store
+
+# Python virtual environments
+bridge/
+env/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Secrets
+configref/.env
+.env
+
+# Build / lock artifacts
+dist/
+*.tsbuildinfo
+stitch_hermes_agentflow_studio/package-lock.json

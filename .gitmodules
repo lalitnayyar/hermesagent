@@ -1,0 +1,4 @@
+[submodule "stitch_hermes_agentflow_studio/agentflow-studio-app"]
+	path = stitch_hermes_agentflow_studio/agentflow-studio-app
+	url = https://github.com/lalitnayyar/hermesagent.git
+	branch = agentflow-app-sync
