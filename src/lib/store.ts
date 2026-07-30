@@ -60,6 +60,7 @@ export interface Schedule {
 
 export interface Settings {
   gateway: string
+  hermesApi: string
   ollamaHost: string
   mode: 'gateway' | 'enhanced' | 'offline'
   maxRetries: number
@@ -210,6 +211,7 @@ export const useAppStore = create<AppState>()(
       activityFeed: initialFeed as Activity[],
       settings: {
         gateway: 'https://hermes-gateway.local',
+        hermesApi: 'http://127.0.0.1:8642',
         ollamaHost: 'http://127.0.0.1:11434',
         mode: 'enhanced',
         maxRetries: 3,

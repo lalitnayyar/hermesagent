@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 export default function Settings() {
   const { settings, updateSettings, toast } = useAppStore()
   const [testResult, setTestResult] = useState('')
+  const [testBody, setTestBody] = useState('')
   const [testing, setTesting] = useState(false)
 
   const updateField = <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
@@ -21,6 +22,7 @@ export default function Settings() {
   const reset = () => {
     updateSettings({
       gateway: 'https://hermes-gateway.local',
+      hermesApi: 'http://127.0.0.1:8642',
       ollamaHost: 'http://127.0.0.1:11434',
       mode: 'enhanced',
       maxRetries: 3,
@@ -28,22 +30,57 @@ export default function Settings() {
       parallelAgents: 5,
       governance: { requireApproval: true, logReasoning: true, autoSaveDrafts: false }
     })
+    setTestResult('')
+    setTestBody('')
   }
 
   const runTest = async (url: string, label: string) => {
     setTesting(true)
     setTestResult('')
+    setTestBody('')
     try {
       const data = await api.testConnection({ url })
-      setTestResult(`${label}: ${data.reachable ? 'reachable' : 'not reachable'} (status ${data.status ?? data.error})`)
-      toast(`${label} test complete`, data.reachable ? 'success' : 'warning')
+      const status = data.status ?? data.error ?? 'unknown'
+      setTestResult(`${label}: ${data.reachable ? 'OK' : 'FAIL'} (status ${status})`)
+      setTestBody(data.body ?? data.error ?? '')
+      if (data.body) {
+        setTestBody(data.body)
+      }
+      toast(`${label}: ${data.reachable ? 'OK' : 'FAIL'} (${status})`, data.reachable ? 'success' : 'warning')
     } catch (err: any) {
       setTestResult(`${label}: error - ${err.message}`)
-      toast(`${label} test failed`, 'warning')
+      setTestBody('')
+      toast(`${label}: error - ${err.message}`, 'warning')
     } finally {
       setTesting(false)
     }
   }
+
+  const urlField = (
+    label: string,
+    field: keyof AppSettings,
+    testPath: string,
+    testLabel: string
+  ) => (
+    <div className="space-y-sm">
+      <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">{label}</label>
+      <div className="flex gap-sm">
+        <input
+          value={settings[field] as string}
+          onChange={(e) => updateField(field, e.target.value as AppSettings[typeof field])}
+          className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+          type="text"
+        />
+        <button
+          onClick={() => runTest(`${settings[field] as string}${testPath}`, testLabel)}
+          disabled={testing || !settings[field]}
+          className="px-md py-sm bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-semibold disabled:opacity-50 whitespace-nowrap"
+        >
+          Test
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="max-w-4xl mx-auto space-y-lg">
@@ -56,39 +93,23 @@ export default function Settings() {
         <section className="space-y-md">
           <h3 className="font-headline-sm text-headline-sm flex items-center gap-sm">
             <span className="material-symbols-outlined text-primary">hub</span>
-            Hermes Gateway
+            Hermes
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-            <div className="space-y-sm">
-              <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Gateway URL</label>
-              <div className="flex gap-sm">
-                <input
-                  value={settings.gateway}
-                  onChange={(e) => updateField('gateway', e.target.value)}
-                  className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                  type="text"
-                />
-                <button
-                  onClick={() => runTest(settings.gateway, 'Gateway')}
-                  disabled={testing || !settings.gateway}
-                  className="px-md py-sm bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-semibold disabled:opacity-50"
-                >
-                  Test
-                </button>
-              </div>
-            </div>
-            <div className="space-y-sm">
-              <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Connection Mode</label>
-              <select
-                value={settings.mode}
-                onChange={(e) => updateField('mode', e.target.value as AppSettings['mode'])}
-                className="w-full bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary outline-none"
-              >
-                <option value="gateway">Gateway Only</option>
-                <option value="enhanced">Enhanced Gateway</option>
-                <option value="offline">Offline / Local</option>
-              </select>
-            </div>
+            {urlField('Hermes API URL', 'hermesApi', '/health', 'Hermes API')}
+            {urlField('Hermes Gateway URL', 'gateway', '/health', 'Hermes Gateway')}
+          </div>
+          <div className="space-y-sm">
+            <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Connection Mode</label>
+            <select
+              value={settings.mode}
+              onChange={(e) => updateField('mode', e.target.value as AppSettings['mode'])}
+              className="w-full bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary outline-none"
+            >
+              <option value="gateway">Gateway Only</option>
+              <option value="enhanced">Enhanced Gateway</option>
+              <option value="offline">Offline / Local</option>
+            </select>
           </div>
         </section>
 
@@ -99,24 +120,7 @@ export default function Settings() {
             <span className="material-symbols-outlined text-secondary">memory</span>
             Ollama
           </h3>
-          <div className="space-y-sm">
-            <label className="text-label-xs text-outline uppercase tracking-wider font-label-xs">Ollama Host</label>
-            <div className="flex gap-sm">
-              <input
-                value={settings.ollamaHost}
-                onChange={(e) => updateField('ollamaHost', e.target.value)}
-                className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-md py-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                type="text"
-              />
-              <button
-                onClick={() => runTest(`${settings.ollamaHost}/api/tags`, 'Ollama')}
-                disabled={testing || !settings.ollamaHost}
-                className="px-md py-sm bg-surface-container border border-outline-variant rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-semibold disabled:opacity-50"
-              >
-                Test
-              </button>
-            </div>
-          </div>
+          {urlField('Ollama Host', 'ollamaHost', '/api/tags', 'Ollama')}
         </section>
 
         <hr className="border-outline-variant/30" />
@@ -168,8 +172,13 @@ export default function Settings() {
         </section>
 
         {testResult && (
-          <div className="p-md bg-surface-container border border-outline-variant rounded-lg">
-            <span className="text-body-sm text-on-surface">{testResult}</span>
+          <div className="p-md bg-surface-container border border-outline-variant rounded-lg space-y-sm">
+            <span className="text-body-sm text-on-surface font-semibold">{testResult}</span>
+            {testBody && (
+              <pre className="text-[11px] text-on-surface-variant whitespace-pre-wrap max-h-48 overflow-auto border-t border-outline-variant/30 pt-sm">
+                {testBody}
+              </pre>
+            )}
           </div>
         )}
 

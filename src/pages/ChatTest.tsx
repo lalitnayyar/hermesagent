@@ -6,7 +6,7 @@ import { useAppStore } from '@/lib/store'
 export default function ChatTest() {
   const { settings } = useAppStore()
   const [message, setMessage] = useState('capital of india')
-  const [gateway, setGateway] = useState(settings.gateway || 'http://127.0.0.1:3000')
+  const [gateway, setGateway] = useState(settings.hermesApi || 'http://127.0.0.1:8642')
   const [endpoint, setEndpoint] = useState('/chat')
   const [ollamaHost, setOllamaHost] = useState(settings.ollamaHost || 'http://127.0.0.1:11434')
   const [model, setModel] = useState('gemma4:cloud')
@@ -44,7 +44,7 @@ export default function ChatTest() {
       <h2 className="font-headline-md text-headline-md text-on-surface">Hermes / Ollama Chat Test</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
         <div className="space-y-sm">
-          <label className="text-label-sm text-on-surface-variant">Gateway URL</label>
+          <label className="text-label-sm text-on-surface-variant">Hermes API URL</label>
           <input
             type="text"
             value={gateway}

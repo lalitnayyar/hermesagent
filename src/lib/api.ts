@@ -76,5 +76,5 @@ export const api = {
 
   // Connection test
   testConnection: (payload: { url: string }) =>
-    fetchJson<{ reachable: boolean; status?: number; error?: string }>('/test', { method: 'POST', body: JSON.stringify(payload) }),
+    fetchJson<{ reachable: boolean; status?: number; body?: string; error?: string }>('/test', { method: 'POST', body: JSON.stringify(payload) }),
 }
