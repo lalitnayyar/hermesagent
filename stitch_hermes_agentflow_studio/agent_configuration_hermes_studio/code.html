@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agent Configuration | Hermes Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#0b1326",
+                        "primary": "#b4c5ff",
+                        "background": "#0b1326",
+                        "surface-variant": "#2d3449",
+                        "outline-variant": "#434655",
+                        "surface-container": "#171f33",
+                        "surface-bright": "#31394d",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-error": "#690005",
+                        "primary-container": "#2563eb",
+                        "surface-container-high": "#222a3d",
+                        "on-primary-container": "#eeefff",
+                        "on-background": "#dae2fd",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-container": "#996100",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-surface-variant": "#c3c6d7",
+                        "error-container": "#93000a",
+                        "primary-fixed": "#dbe1ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "inverse-on-surface": "#283044",
+                        "on-tertiary-container": "#ffeedd",
+                        "secondary": "#4edea3",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface": "#0b1326",
+                        "surface-container-lowest": "#060e20",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "secondary-container": "#00a572",
+                        "surface-tint": "#b4c5ff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "error": "#ffb4ab",
+                        "on-surface": "#dae2fd",
+                        "on-secondary-fixed-variant": "#005236",
+                        "outline": "#8d90a0",
+                        "on-tertiary": "#472a00",
+                        "on-primary": "#002a78",
+                        "on-secondary": "#003824",
+                        "on-primary-fixed": "#00174b",
+                        "inverse-primary": "#0053db",
+                        "on-secondary-fixed": "#002113",
+                        "inverse-surface": "#dae2fd",
+                        "on-secondary-container": "#00311f",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-container-highest": "#2d3449",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-low": "#131b2e",
+                        "tertiary": "#ffb95f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "margin": "24px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xl": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "tech-mono": ["Geist"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-xs": ["11px", {"lineHeight": "16px", "fontWeight": "700"}],
+                        "tech-mono": ["13px", {"lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+            -webkit-font-smoothing: antialiased;
+        }
+        .ping-active {
+            position: relative;
+        }
+        .ping-active::after {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: #4edea3;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #4edea3;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; transform: translateY(-50%) scale(1); }
+            50% { opacity: 0.4; transform: translateY(-50%) scale(1.5); }
+            100% { opacity: 1; transform: translateY(-50%) scale(1); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #171f33;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #434655;
+            border-radius: 2px;
+        }
+        .node-glow {
+            box-shadow: 0 0 15px -5px rgba(37, 99, 235, 0.2);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-background overflow-hidden h-screen flex">
+<!-- Sidebar (Predicted SideNavBar) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-dim border-r border-outline-variant flex flex-col py-md gap-sm z-50">
+<div class="px-md mb-lg">
+<h1 class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">Hermes Studio</h1>
+<p class="font-tech-mono text-[10px] text-outline uppercase tracking-widest mt-1">Orchestration v2.4</p>
+</div>
+<nav class="flex-1 px-sm space-y-1">
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-body-sm text-body-sm">Dashboard</span>
+</div>
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
+<span class="font-body-sm text-body-sm">Workflows</span>
+</div>
+<!-- Active Tab: Agents -->
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform bg-primary-container/20 text-primary border-l-4 border-primary font-semibold transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<span class="font-body-sm text-body-sm">Agents</span>
+</div>
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+<span class="font-body-sm text-body-sm">Tasks</span>
+</div>
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+<span class="font-body-sm text-body-sm">Approvals</span>
+</div>
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+<span class="font-body-sm text-body-sm">Workspace</span>
+</div>
+</nav>
+<div class="px-sm mt-auto space-y-1 border-t border-outline-variant pt-md">
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="font-body-sm text-body-sm">Docs</span>
+</div>
+<div class="flex items-center gap-md px-md py-sm cursor-pointer active:scale-95 transition-transform text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span class="font-body-sm text-body-sm">Support</span>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 flex-1 flex flex-col bg-background relative overflow-hidden">
+<!-- Header (Predicted TopAppBar) -->
+<header class="w-full h-16 bg-surface-container flex justify-between items-center px-gutter sticky top-0 z-40 border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary cursor-pointer">arrow_back</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Agent Configuration: <span class="text-primary">Agent 01 - Task Intake &amp; Planning</span></h2>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-bright/10 p-2 rounded-full transition-colors">sensors</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-bright/10 p-2 rounded-full transition-colors">settings_suggest</span>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">HS</div>
+</div>
+</header>
+<!-- Sub-navigation Tabs -->
+<div class="px-gutter bg-surface-container-low border-b border-outline-variant flex items-center gap-xl">
+<button class="py-md font-body-sm text-body-sm text-primary border-b-2 border-primary">General</button>
+<button class="py-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors">Hermes Profile</button>
+<button class="py-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors">Skills</button>
+<button class="py-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors">Memory Governance</button>
+<button class="py-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors">Execution Policy</button>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-margin">
+<div class="max-w-5xl mx-auto space-y-lg">
+<!-- Bento Layout for Content -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- Agent Identity Card -->
+<section class="col-span-12 lg:col-span-8 bg-surface-container border border-outline-variant rounded-xl p-lg node-glow">
+<div class="flex justify-between items-start mb-md">
+<div>
+<h3 class="font-headline-sm text-headline-sm mb-1">Agent Identity</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Configure core metadata and operational taxonomy.</p>
+</div>
+<div class="w-12 h-12 bg-surface-bright rounded-lg flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="space-y-base col-span-2 sm:col-span-1">
+<label class="font-label-xs text-label-xs text-outline uppercase">Agent Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded p-sm font-body-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" type="text" value="Task Intake &amp; Planning"/>
+</div>
+<div class="space-y-base col-span-2 sm:col-span-1">
+<label class="font-label-xs text-label-xs text-outline uppercase">Agent Type</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded p-sm font-body-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none">
+<option>Specialist</option>
+<option>Supervisor</option>
+<option>Executor</option>
+<option>Critic</option>
+</select>
+</div>
+<div class="space-y-base col-span-2">
+<label class="font-label-xs text-label-xs text-outline uppercase">Description</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded p-sm font-body-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" rows="2">Responsible for parsing multi-modal requests, determining priority levels, and generating execution roadmaps.</textarea>
+</div>
+</div>
+</section>
+<!-- Model Selection Card -->
+<section class="col-span-12 lg:col-span-4 bg-surface-container border border-outline-variant rounded-xl p-lg">
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-secondary">memory</span>
+<h3 class="font-headline-sm text-headline-sm">Model Selection</h3>
+</div>
+<div class="space-y-md">
+<div class="p-md bg-surface-container-low border border-outline-variant rounded group hover:border-primary transition-colors cursor-pointer">
+<div class="flex justify-between items-center">
+<div>
+<p class="font-label-xs text-label-xs text-secondary uppercase mb-1">Recommended</p>
+<p class="font-body-md text-body-md font-semibold">GPT-4o</p>
+</div>
+<div class="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center p-0.5">
+<div class="w-full h-full bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="p-md bg-surface-container-low border border-outline-variant rounded group hover:border-outline transition-colors cursor-pointer opacity-70">
+<div class="flex justify-between items-center">
+<div>
+<p class="font-label-xs text-label-xs text-outline uppercase mb-1">Balanced</p>
+<p class="font-body-md text-body-md font-semibold">Claude 3.5 Sonnet</p>
+</div>
+<div class="w-4 h-4 rounded-full border-2 border-outline-variant"></div>
+</div>
+</div>
+<button class="w-full py-sm border border-dashed border-outline-variant rounded font-label-xs text-label-xs text-on-surface-variant hover:bg-surface-bright/5 transition-all uppercase">Browse All Models</button>
+</div>
+</section>
+<!-- Hermes Profile Mapping -->
+<section class="col-span-12 bg-surface-container border border-outline-variant rounded-xl p-lg flex flex-col sm:flex-row items-center justify-between gap-md">
+<div class="flex items-center gap-lg">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">link</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm">Hermes Profile Mapping</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Linked workspace context and persona parameters.</p>
+</div>
+</div>
+<div class="flex items-center gap-md flex-wrap justify-end">
+<div class="px-md py-sm bg-surface-container-low border border-outline-variant rounded flex items-center gap-md min-w-[200px]">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">account_circle</span>
+<span class="font-body-sm text-body-sm flex-1">Shared Profile v2</span>
+<span class="font-label-xs text-[9px] px-1.5 py-0.5 bg-secondary/10 text-secondary rounded uppercase border border-secondary/20 ping-active ml-2">Connected</span>
+</div>
+<a class="text-primary font-label-xs text-label-xs uppercase hover:underline flex items-center gap-xs" href="#">
+                                View Profile in Workspace
+                                <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+</div>
+</section>
+<!-- Skills Section -->
+<section class="col-span-12 lg:col-span-7 bg-surface-container border border-outline-variant rounded-xl flex flex-col">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center">
+<div>
+<h3 class="font-headline-sm text-headline-sm">Assigned Skills</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Modular capabilities inherited from the studio registry.</p>
+</div>
+<button class="bg-primary-container hover:bg-primary-container/90 text-on-primary-container px-md py-sm rounded font-body-sm font-semibold flex items-center gap-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+                                Add/Sync Skills
+                            </button>
+</div>
+<div class="divide-y divide-outline-variant/30">
+<!-- Skill Row -->
+<div class="p-md flex items-center hover:bg-surface-bright/5 transition-colors group">
+<div class="w-1 bg-primary h-8 mr-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex-1">
+<p class="font-body-md font-semibold">Request Classification</p>
+<p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-tighter">Category: Linguistics / Intent Parsing</p>
+</div>
+<div class="text-right">
+<p class="font-tech-mono text-tech-mono text-secondary mb-1">Active</p>
+<p class="font-label-xs text-label-xs text-outline uppercase">v4.2.1-prod</p>
+</div>
+<button class="ml-lg p-sm text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<!-- Skill Row -->
+<div class="p-md flex items-center hover:bg-surface-bright/5 transition-colors group">
+<div class="w-1 bg-primary h-8 mr-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex-1">
+<p class="font-body-md font-semibold">Priority Detection</p>
+<p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-tighter">Category: Business Logic / SLA</p>
+</div>
+<div class="text-right">
+<p class="font-tech-mono text-tech-mono text-secondary mb-1">Active</p>
+<p class="font-label-xs text-label-xs text-outline uppercase">v2.0.4-LTS</p>
+</div>
+<button class="ml-lg p-sm text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<!-- Skill Row -->
+<div class="p-md flex items-center hover:bg-surface-bright/5 transition-colors group">
+<div class="w-1 bg-primary h-8 mr-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex-1">
+<p class="font-body-md font-semibold">Roadmap Synthesis</p>
+<p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-tighter">Category: Reasoning / Planning</p>
+</div>
+<div class="text-right">
+<p class="font-tech-mono text-tech-mono text-secondary mb-1">Active</p>
+<p class="font-label-xs text-label-xs text-outline uppercase">v1.1.0-exp</p>
+</div>
+<button class="ml-lg p-sm text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Memory Governance Section -->
+<section class="col-span-12 lg:col-span-5 bg-surface-container border border-outline-variant rounded-xl p-lg flex flex-col h-full">
+<div class="mb-lg">
+<h3 class="font-headline-sm text-headline-sm mb-1">Memory Governance</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Control how data persists and propagates across sessions.</p>
+</div>
+<div class="space-y-lg flex-1">
+<div class="space-y-sm">
+<label class="font-label-xs text-label-xs text-outline uppercase block">Memory Scope</label>
+<div class="grid grid-cols-1 gap-sm">
+<label class="flex items-center p-md bg-surface-container-low border border-outline-variant rounded cursor-pointer group hover:border-primary transition-all">
+<input class="hidden peer" name="mem_scope" type="radio"/>
+<div class="w-4 h-4 rounded-full border-2 border-outline-variant peer-checked:border-primary peer-checked:bg-primary mr-md transition-all"></div>
+<div>
+<p class="font-body-sm font-semibold">No persistent memory</p>
+<p class="text-[11px] text-on-surface-variant">Ephemeral state, cleared after execution.</p>
+</div>
+</label>
+<label class="flex items-center p-md bg-surface-container-low border border-primary/40 rounded cursor-pointer group transition-all">
+<input checked="" class="hidden peer" name="mem_scope" type="radio"/>
+<div class="w-4 h-4 rounded-full border-2 border-primary bg-primary mr-md transition-all"></div>
+<div>
+<p class="font-body-sm font-semibold">Read-and-propose</p>
+<p class="text-[11px] text-on-surface-variant">Reads from shared memory, proposes new lessons.</p>
+</div>
+</label>
+</div>
+</div>
+<div class="pt-md border-t border-outline-variant">
+<div class="flex items-center justify-between mb-md">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-tertiary">shield</span>
+<span class="font-body-sm font-semibold">Sensitive Data Detection</span>
+</div>
+<button class="w-10 h-5 bg-primary rounded-full relative transition-colors">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</button>
+</div>
+<div class="bg-surface-bright/10 p-md rounded border border-outline-variant flex items-center justify-between">
+<span class="font-body-sm text-on-surface-variant italic">Governance logs show 3 red-teaming alerts today.</span>
+<a class="text-primary font-label-xs text-label-xs uppercase hover:underline" href="#">View Historical Lessons</a>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Spacer -->
+<div class="h-xl"></div>
+</div>
+</div>
+<!-- Sticky Footer Actions -->
+<footer class="h-20 bg-surface-container border-t border-outline-variant px-gutter flex items-center justify-between z-40">
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant font-body-sm font-semibold hover:text-on-surface px-md py-sm border border-outline-variant rounded transition-all active:scale-95">Reset Defaults</button>
+<button class="text-on-surface-variant font-body-sm font-semibold hover:text-on-surface px-md py-sm flex items-center gap-sm hover:bg-surface-bright/10 transition-all rounded">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+                    Clone Agent
+                </button>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant font-body-sm font-semibold hover:text-on-surface px-md py-sm transition-all">Cancel</button>
+<button class="bg-primary text-on-primary font-body-sm font-bold px-xl py-sm rounded-lg hover:shadow-[0_0_15px_rgba(180,197,255,0.4)] transition-all active:scale-95">Save Changes</button>
+</div>
+</footer>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('button, [cursor-pointer]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // Subtle ripple/pulse logic can be added here
+            });
+        });
+
+        // Tab Switching Simulation
+        const tabs = document.querySelectorAll('.px-gutter.bg-surface-container-low button');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('text-primary', 'border-b-2', 'border-primary');
+                    t.classList.add('text-on-surface-variant');
+                });
+                tab.classList.add('text-primary', 'border-b-2', 'border-primary');
+                tab.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

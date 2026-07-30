@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hermes Studio | Approvals Governance</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ping-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.2); }
+        }
+        .glow-active {
+            box-shadow: 0 0 12px 2px rgba(37, 99, 235, 0.2);
+        }
+        .workflow-edge {
+            background: linear-gradient(90deg, transparent 0%, #2563eb 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: moveGradient 3s linear infinite;
+        }
+        @keyframes moveGradient {
+            0% { background-position: 200% 0%; }
+            100% { background-position: -200% 0%; }
+        }
+        /* Custom scrollbar for technical feel */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0b1326; }
+        ::-webkit-scrollbar-thumb { background: #434655; border-radius: 2px; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-container": "#eeefff",
+                      "tertiary-container": "#996100",
+                      "on-error": "#690005",
+                      "surface-container": "#171f33",
+                      "surface-container-highest": "#2d3449",
+                      "tertiary": "#ffb95f",
+                      "on-primary-fixed": "#00174b",
+                      "outline": "#8d90a0",
+                      "on-surface-variant": "#c3c6d7",
+                      "on-tertiary-fixed": "#2a1700",
+                      "inverse-primary": "#0053db",
+                      "error": "#ffb4ab",
+                      "background": "#0b1326",
+                      "outline-variant": "#434655",
+                      "on-secondary": "#003824",
+                      "tertiary-fixed": "#ffddb8",
+                      "on-secondary-fixed-variant": "#005236",
+                      "inverse-surface": "#dae2fd",
+                      "on-tertiary": "#472a00",
+                      "on-background": "#dae2fd",
+                      "on-surface": "#dae2fd",
+                      "primary-fixed": "#dbe1ff",
+                      "inverse-on-surface": "#283044",
+                      "surface-dim": "#0b1326",
+                      "on-primary": "#002a78",
+                      "primary-container": "#2563eb",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "error-container": "#93000a",
+                      "secondary-fixed-dim": "#4edea3",
+                      "surface-container-lowest": "#060e20",
+                      "surface-container-low": "#131b2e",
+                      "on-tertiary-container": "#ffeedd",
+                      "surface-bright": "#31394d",
+                      "surface": "#0b1326",
+                      "secondary": "#4edea3",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-secondary-container": "#00311f",
+                      "surface-tint": "#b4c5ff",
+                      "surface-container-high": "#222a3d",
+                      "primary": "#b4c5ff",
+                      "on-error-container": "#ffdad6",
+                      "surface-variant": "#2d3449",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "secondary-container": "#00a572",
+                      "on-secondary-fixed": "#002113",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "tertiary-fixed-dim": "#ffb95f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "xl": "40px",
+                      "margin": "24px",
+                      "sm": "8px",
+                      "lg": "24px",
+                      "gutter": "16px",
+                      "md": "16px",
+                      "base": "4px"
+              },
+              "fontFamily": {
+                      "headline-sm": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "label-xs": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "tech-mono": ["Geist"],
+                      "headline-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-xs": ["11px", {"lineHeight": "16px", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "tech-mono": ["13px", {"lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary/30 overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center px-lg w-full sticky top-0 z-50 bg-background dark:bg-background border-b border-outline-variant h-16">
+<div class="flex items-center gap-md">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">Hermes AgentFlow</span>
+<div class="hidden md:flex gap-md ml-xl">
+<span class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Gateway</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Active Model</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Enhanced</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="bg-surface-container-high px-md py-xs rounded flex items-center gap-sm border border-outline-variant">
+<span class="material-symbols-outlined text-secondary text-sm">sensors</span>
+<span class="font-tech-mono text-label-xs uppercase">System Live</span>
+<div class="w-2 h-2 rounded-full bg-secondary ping-dot"></div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">memory</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">settings_input_component</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior technical architect in a dark, atmospheric studio setting. The lighting is dramatic and moody with deep shadows and soft highlights of blue, conveying a sense of authority and engineering excellence. The background is a blurred high-tech server room." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvS-GuLI_v5L6l87wmQZc90yHbip6YlNvXyLg1lAj3xl57jpocpLJaIVvif2Ua5M8by00ytrooCFqpFoRgbNVaQCZpopt1WBqGcl3GbwolWmnx_Ols1f5jWsLtjROV2xrq3sSa-jhJzJPDGGEOxrjQw2hAA1up53y7XhkXfKzCuqbS_sdJ6bKSAcYqVhMIb96qaf4A5inEB4WaKsqaV3vcHCiiN1FTir9AuAAH9R_A-bl_OoDNVnh9"/>
+</div>
+</div>
+</header>
+<div class="flex h-[calc(100vh-64px)] overflow-hidden">
+<!-- Side Navigation -->
+<nav class="h-screen w-64 flex flex-col bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant py-lg shrink-0">
+<div class="px-md mb-lg">
+<h2 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">Hermes Studio</h2>
+<p class="text-[10px] uppercase tracking-widest text-outline">Agentic Orchestration</p>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-md px-md py-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors group" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span>Workflows</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors group" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span>Agents</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors group" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span>Tasks</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm font-body-md text-body-md text-primary font-bold border-r-2 border-primary bg-primary/5 group" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fact_check</span>
+<span>Approvals</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors group" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span>Hermes Workspace</span>
+</a>
+</div>
+<div class="mt-auto px-md py-md border-t border-outline-variant space-y-1">
+<a class="flex items-center gap-md py-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-md py-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto bg-background relative">
+<!-- Background Decoration -->
+<div class="absolute inset-0 pointer-events-none opacity-20">
+
+</div>
+<div class="max-w-6xl mx-auto p-xl relative z-10">
+<!-- Header -->
+<div class="flex justify-between items-end mb-xl">
+<div>
+<div class="flex items-center gap-sm mb-xs">
+<span class="bg-primary/10 text-primary px-sm py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-primary/20">Governance Hub</span>
+<span class="text-on-surface-variant text-label-xs">• 4 Pending Decisions</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface">Human-in-the-Loop</h1>
+<p class="text-on-surface-variant font-body-md mt-xs">Validate sensitive autonomous agent operations and system state modifications.</p>
+</div>
+<button class="bg-primary hover:bg-primary-container text-on-primary font-semibold px-lg py-sm rounded-lg transition-all active:scale-95 flex items-center gap-md shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-sm">history</span>
+                        View Decision Logs
+                    </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Sidebar: Stats & Health -->
+<div class="col-span-12 lg:col-span-3 space-y-gutter">
+<div class="bg-surface-container-low border border-outline-variant p-md rounded-xl">
+<h3 class="font-label-xs text-label-xs text-outline uppercase tracking-widest mb-md">System Latency</h3>
+<div class="h-16 w-full flex items-end gap-1">
+<div class="w-full bg-secondary/20 h-[40%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-[60%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/40 h-[90%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-[50%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-[30%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-[70%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-[45%] rounded-t-sm"></div>
+</div>
+<div class="flex justify-between mt-sm text-tech-mono text-[10px] text-secondary">
+<span>24ms AVG</span>
+<span>100% Uptime</span>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant p-md rounded-xl">
+<h3 class="font-label-xs text-label-xs text-outline uppercase tracking-widest mb-md">Risk Distribution</h3>
+<div class="space-y-sm">
+<div class="flex justify-between items-center text-body-sm font-tech-mono">
+<span class="text-error">CRITICAL</span>
+<span>01</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[25%]"></div>
+</div>
+<div class="flex justify-between items-center text-body-sm font-tech-mono">
+<span class="text-tertiary">ELEVATED</span>
+<span>03</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[75%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main List of Approvals -->
+<div class="col-span-12 lg:col-span-9 space-y-md">
+<!-- Approval Card 1: Critical -->
+<div class="group relative bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden transition-all hover:border-primary/50 hover:bg-surface-container">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="p-lg flex flex-col md:flex-row gap-lg">
+<div class="flex-1">
+<div class="flex items-center gap-md mb-sm">
+<div class="flex items-center gap-xs">
+<div class="w-5 h-5 rounded-sm bg-error/20 flex items-center justify-center border border-error/30">
+<span class="material-symbols-outlined text-[14px] text-error">priority_high</span>
+</div>
+<span class="font-tech-mono text-label-xs text-error">HIGH RISK</span>
+</div>
+<span class="text-outline text-label-xs">•</span>
+<span class="font-tech-mono text-label-xs text-on-surface-variant">ID: 0x82A..F21</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Infrastructure Change</h4>
+<div class="flex items-center gap-sm mb-md">
+<div class="w-6 h-6 rounded-full bg-surface-variant border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A futuristic AI agent icon, glowing blue core inside a matte black geometric housing. High-tech, sophisticated, 3D rendered style with sharp edges and subtle lens flares." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi4NaJY4laa5Y_zOHcO28ddA_hHur08c3bgFQtBI2nZ2-RxN2SCTa6JAoH2_GXbEpJSLIV9PhEI15E6w2R0TwWIkJskDw95HQ3UsJqZU4mO6Xg2c_nLj9B8LnHzgGoCTy6vWzO8aTWZktlsFEsk0VMfyex3ny7w9aDE83ODstKit6YDCWdcPTdbjFBdwBd2OVU3XElx9VMlxb1CjT_dezMK5XPTghvhRDOq_uTeRyZWgvQBT2NI-Rg"/>
+</div>
+<span class="text-body-sm text-on-surface-variant">Request by <strong class="text-primary">Ops-Sentinel-V4</strong></span>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                                        Agent proposes scaling the production cluster <code class="text-tech-mono bg-surface-variant px-xs rounded">us-east-1a</code> by 400% to handle a predicted spike in batch processing. Potential budget overrun: <span class="text-tertiary">$12,400/mo</span>.
+                                    </p>
+<div class="mt-md">
+<a class="text-primary font-tech-mono text-label-xs flex items-center gap-xs hover:underline" href="#">
+                                            VIEW EVIDENCE &amp; TRACE LOGS
+                                            <span class="material-symbols-outlined text-[14px]">arrow_outward</span>
+</a>
+</div>
+</div>
+<div class="md:w-48 flex flex-col justify-center gap-sm">
+<button class="w-full bg-secondary-container hover:bg-secondary text-on-secondary-container font-bold py-sm rounded-lg flex items-center justify-center gap-sm transition-all shadow-sm active:scale-95">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        Approve
+                                    </button>
+<button class="w-full bg-surface-container-highest hover:bg-error-container hover:text-on-error-container text-on-surface-variant border border-outline-variant font-bold py-sm rounded-lg flex items-center justify-center gap-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+                                        Reject
+                                    </button>
+</div>
+</div>
+</div>
+<!-- Approval Card 2: Medium -->
+<div class="group relative bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden transition-all hover:border-primary/50 hover:bg-surface-container">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary"></div>
+<div class="p-lg flex flex-col md:flex-row gap-lg">
+<div class="flex-1">
+<div class="flex items-center gap-md mb-sm">
+<div class="flex items-center gap-xs">
+<div class="w-5 h-5 rounded-sm bg-tertiary/20 flex items-center justify-center border border-tertiary/30">
+<span class="material-symbols-outlined text-[14px] text-tertiary">warning</span>
+</div>
+<span class="font-tech-mono text-label-xs text-tertiary">MEDIUM RISK</span>
+</div>
+<span class="text-outline text-label-xs">•</span>
+<span class="font-tech-mono text-label-xs text-on-surface-variant">ID: 0x9B1..A44</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Financial Action</h4>
+<div class="flex items-center gap-sm mb-md">
+<div class="w-6 h-6 rounded-full bg-surface-variant border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A digital representation of a financial AI agent. Minimalist gold and silver circuitry flowing into a central data node. Soft depth of field, high-end technical photography style, dark background with subtle amber glow." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJOviEO6TSQCWFjejjL9sdZjUFGW2RAOws0M5pEo3YDfRA_p0YnwWgY2La78LkAnRT0mPANtS-4T3XOcyUFEa8s5n6Gc6S66C-XjNHtJ_mrxNjRqs6hX22x3nJ9ntT__J6XDjQ3wp7K8fBhd0BNcOYP2GSyHx_RAuGa353ifXYNnlUdXjNQDIdhZ-ju0KmCDT0TYacMBDJ2uGvsGUIaM0JqSDnjerN5N8whH4Pma6UcwVMmb3ydepY"/>
+</div>
+<span class="text-body-sm text-on-surface-variant">Request by <strong class="text-primary">Quant-Arbitrage-Bot</strong></span>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                                        Executed cross-chain liquidity transfer of <span class="text-secondary">42.5 ETH</span> to Layer 2 vault for yield optimization. Requires manual confirmation due to slippage threshold deviation (1.2%).
+                                    </p>
+<div class="mt-md">
+<a class="text-primary font-tech-mono text-label-xs flex items-center gap-xs hover:underline" href="#">
+                                            VIEW EVIDENCE &amp; TRACE LOGS
+                                            <span class="material-symbols-outlined text-[14px]">arrow_outward</span>
+</a>
+</div>
+</div>
+<div class="md:w-48 flex flex-col justify-center gap-sm">
+<button class="w-full bg-secondary-container hover:bg-secondary text-on-secondary-container font-bold py-sm rounded-lg flex items-center justify-center gap-sm transition-all shadow-sm active:scale-95">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        Approve
+                                    </button>
+<button class="w-full bg-surface-container-highest hover:bg-error-container hover:text-on-error-container text-on-surface-variant border border-outline-variant font-bold py-sm rounded-lg flex items-center justify-center gap-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+                                        Reject
+                                    </button>
+</div>
+</div>
+</div>
+<!-- Approval Card 3: Memory Write -->
+<div class="group relative bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden transition-all hover:border-primary/50 hover:bg-surface-container">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="p-lg flex flex-col md:flex-row gap-lg">
+<div class="flex-1">
+<div class="flex items-center gap-md mb-sm">
+<div class="flex items-center gap-xs">
+<div class="w-5 h-5 rounded-sm bg-primary/20 flex items-center justify-center border border-primary/30">
+<span class="material-symbols-outlined text-[14px] text-primary">info</span>
+</div>
+<span class="font-tech-mono text-label-xs text-primary">LOW RISK</span>
+</div>
+<span class="text-outline text-label-xs">•</span>
+<span class="font-tech-mono text-label-xs text-on-surface-variant">ID: 0x22F..C01</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Memory Write</h4>
+<div class="flex items-center gap-sm mb-md">
+<div class="w-6 h-6 rounded-full bg-surface-variant border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A cerebral, neural network inspired AI agent icon. Wispy lines of light connecting in a brain-like shape. Vibrant blue and violet accents on a deep obsidian background. 8k resolution, cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvjM6IaTvnSFPW14uSp_bqLnd-cflavP8XMquVdUWhEH7DNMdyhaD4q8p3xyq_SHjH5fhjzKMXTBsO13gW0ODRpFSPYQxaMW8V874KJJjG_K4iVVlYJzgaTwlGfUekhE2WNkSnD-cvWjGjL07a2T7g3-Rfz1scVG7oOUmEKBtN8qWEfbg3doKOER3PZ634qbsGjR87GnZ032FjkhYblT2FVuYrjkamkrHKi_Ifw7BnmZ7darJFyTXn"/>
+</div>
+<span class="text-body-sm text-on-surface-variant">Request by <strong class="text-primary">Hermes-Analyst</strong></span>
+</div>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                                        Update global user preference vector to include <code class="text-tech-mono bg-surface-variant px-xs rounded">governance_mode: human_in_loop</code> as a permanent heuristic. 
+                                    </p>
+<div class="mt-md">
+<a class="text-primary font-tech-mono text-label-xs flex items-center gap-xs hover:underline" href="#">
+                                            VIEW EVIDENCE &amp; TRACE LOGS
+                                            <span class="material-symbols-outlined text-[14px]">arrow_outward</span>
+</a>
+</div>
+</div>
+<div class="md:w-48 flex flex-col justify-center gap-sm">
+<button class="w-full bg-secondary-container hover:bg-secondary text-on-secondary-container font-bold py-sm rounded-lg flex items-center justify-center gap-sm transition-all shadow-sm active:scale-95">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        Approve
+                                    </button>
+<button class="w-full bg-surface-container-highest hover:bg-error-container hover:text-on-error-container text-on-surface-variant border border-outline-variant font-bold py-sm rounded-lg flex items-center justify-center gap-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+                                        Reject
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Nav for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 bg-surface-container-highest dark:bg-surface-container-highest border-t border-outline-variant flex justify-around items-center py-sm px-md shadow-lg rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant p-2 rounded transition-all">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-xs text-label-xs">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant p-2 rounded transition-all">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-xs text-label-xs">Agents</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fact_check</span>
+<span class="font-label-xs text-label-xs">Approvals</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant p-2 rounded transition-all">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-label-xs text-label-xs">Alerts</span>
+</div>
+</nav>
+<script>
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const originalContent = this.innerHTML;
+                if (this.innerText.includes('Approve')) {
+                    this.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Validating...';
+                    this.classList.add('opacity-80', 'pointer-events-none');
+                    setTimeout(() => {
+                        this.innerHTML = '<span class="material-symbols-outlined">check</span> Success';
+                        this.closest('.group').style.opacity = '0.3';
+                        this.closest('.group').style.pointerEvents = 'none';
+                        this.closest('.group').style.transform = 'scale(0.98)';
+                    }, 1500);
+                } else if (this.innerText.includes('Reject')) {
+                    this.innerHTML = '<span class="material-symbols-outlined">close</span> Rejected';
+                    this.closest('.group').style.opacity = '0.2';
+                    this.closest('.group').style.filter = 'grayscale(1)';
+                    this.closest('.group').style.pointerEvents = 'none';
+                }
+            });
+        });
+
+        // Simulating technical glow on hover
+        const cards = document.querySelectorAll('.group');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('glow-active');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('glow-active');
+            });
+        });
+    </script>
+</body></html>

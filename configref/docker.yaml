@@ -1,0 +1,125 @@
+services:
+  hermes-agent:
+    image: nousresearch/hermes-agent:latest
+    restart: unless-stopped
+    command: ["gateway", "run"]
+
+    env_file:
+      - .env
+
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"
+      API_SERVER_PORT: "8642"
+      API_SERVER_KEY: ${API_SERVER_KEY}
+
+      HERMES_UID: "10010"
+
+      HERMES_DASHBOARD: "1"
+
+      # Dashboard binds to loopback because Workspace shares
+      # the Hermes Agent network namespace.
+      HERMES_DASHBOARD_HOST: "127.0.0.1"
+      HERMES_DASHBOARD_PORT: "9119"
+
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: ${HERMES_DASHBOARD_BASIC_AUTH_USERNAME}
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD}
+      HERMES_DASHBOARD_BASIC_AUTH_SECRET: ${HERMES_DASHBOARD_BASIC_AUTH_SECRET}
+
+    volumes:
+      - hermes-agent-data:/opt/data
+
+      # Auto-title Workspace/API sessions.
+      - ./patches/inject_api_auto_title.py:/opt/hermes-patches/inject_api_auto_title.py:ro
+      - ./patches/99-inject-api-auto-title:/etc/cont-init.d/99-inject-api-auto-title:ro
+
+      # Public dashboard proxy for Traefik.
+      - ./patches/dashboard_proxy.py:/opt/hermes-patches/dashboard_proxy.py:ro
+      - ./patches/98-start-dashboard-proxy:/etc/cont-init.d/98-start-dashboard-proxy:ro
+
+    # Port 3001 is used by Hermes Workspace.
+    # Port 3000 remains available internally for WhatsApp Bridge.
+    ports:
+      - "3001"
+
+    labels:
+      - traefik.enable=true
+
+      # Hermes Workspace
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.service=${COMPOSE_PROJECT_NAME}
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=3001
+
+      # Hermes Agent dashboard
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-agent.rule=Host(`${COMPOSE_PROJECT_NAME}-agent.${TRAEFIK_HOST}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-agent.entrypoints=websecure
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-agent.tls.certresolver=letsencrypt
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-agent.service=${COMPOSE_PROJECT_NAME}-agent
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-agent.middlewares=${COMPOSE_PROJECT_NAME}-agent-auth
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-agent-auth.basicauth.users=${HERMES_AGENT_PORTAL_BASICAUTH_USERS}
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}-agent.loadbalancer.server.port=9120
+
+    expose:
+      - "8642"
+      - "9119"
+      - "9120"
+      - "3000"
+      - "3001"
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://localhost:8642/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  hermes-workspace:
+    image: ghcr.io/outsourc-e/hermes-workspace:latest
+    restart: unless-stopped
+
+    depends_on:
+      hermes-agent:
+        condition: service_healthy
+
+    # Workspace and Agent share one network namespace.
+    # Therefore Workspace must not use WhatsApp Bridge port 3000.
+    network_mode: "service:hermes-agent"
+
+    env_file:
+      - .env
+
+    environment:
+      # Move Hermes Workspace away from WhatsApp Bridge port 3000.
+      PORT: "3001"
+      HOST: "0.0.0.0"
+
+      HERMES_HOME: /home/workspace/.hermes
+      HERMES_WORKSPACE_DIR: /workspace
+
+      HERMES_API_URL: http://127.0.0.1:8642
+      HERMES_DASHBOARD_URL: http://127.0.0.1:9119
+      HERMES_API_TOKEN: ${API_SERVER_KEY}
+
+      HERMES_PASSWORD: ${HERMES_PASSWORD}
+
+      COOKIE_SECURE: "0"
+      TRUST_PROXY: "1"
+
+    volumes:
+      - hermes-agent-data:/home/workspace/.hermes
+      - hermes-workspace-files:/workspace
+
+volumes:
+  hermes-agent-data:
+  hermes-workspace-files:
