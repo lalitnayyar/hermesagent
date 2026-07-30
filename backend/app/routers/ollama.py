@@ -14,7 +14,7 @@ def _default_ollama_host() -> str:
 def ollama(payload: dict) -> dict:
     prompt = payload.get("message", "")
     model = payload.get("model", "gemma4:cloud")
-    host = payload.get("host") or _default_ollama_host()
+    host = (payload.get("host") or _default_ollama_host()).rstrip("/")
     if not prompt:
         raise HTTPException(status_code=400, detail="message is required")
 

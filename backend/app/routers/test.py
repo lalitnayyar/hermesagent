@@ -12,7 +12,7 @@ def _truncate(text: str, limit: int = 500) -> str:
 
 @router.post("/test")
 def test_connection(payload: dict) -> dict:
-    url = payload.get("url", "")
+    url = payload.get("url", "").rstrip("/")
     if not url:
         raise HTTPException(status_code=400, detail="url is required")
     try:

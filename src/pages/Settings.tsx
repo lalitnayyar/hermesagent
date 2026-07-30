@@ -21,9 +21,9 @@ export default function Settings() {
 
   const reset = () => {
     updateSettings({
-      gateway: 'https://hermes-gateway.local',
-      hermesApi: 'http://127.0.0.1:8642',
-      ollamaHost: 'http://127.0.0.1:11434',
+      gateway: 'http://hermes-agent:9119',
+      hermesApi: 'http://hermes-agent:8642',
+      ollamaHost: 'http://host.docker.internal:11434',
       mode: 'enhanced',
       maxRetries: 3,
       timeout: 30,
