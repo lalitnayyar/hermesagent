@@ -11,8 +11,18 @@ def _truncate(text: str, limit: int = 500) -> str:
 
 
 @router.post("/test")
+def _resolve_url(url: str) -> str:
+    return (url
+            .replace("127.0.0.1:9119", "hermes-agent:9119")
+            .replace("127.0.0.1:8642", "hermes-agent:8642")
+            .replace("localhost:9119", "hermes-agent:9119")
+            .replace("localhost:8642", "hermes-agent:8642")
+            .replace("127.0.0.1:11434", "host.docker.internal:11434")
+            .replace("localhost:11434", "host.docker.internal:11434"))
+
+
 def test_connection(payload: dict) -> dict:
-    url = payload.get("url", "").rstrip("/")
+    url = _resolve_url(payload.get("url", "").rstrip("/"))
     if not url:
         raise HTTPException(status_code=400, detail="url is required")
     try:

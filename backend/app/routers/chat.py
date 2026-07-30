@@ -28,6 +28,7 @@ def _format_response(text: str, content_type: str) -> str:
 def chat(payload: dict) -> dict:
     message = payload.get("message", "")
     gateway = payload.get("gateway", settings.hermes_gateway_url).rstrip("/")
+    gateway = gateway.replace("127.0.0.1:9119", "hermes-agent:9119").replace("127.0.0.1:8642", "hermes-agent:8642").replace("localhost:9119", "hermes-agent:9119").replace("localhost:8642", "hermes-agent:8642")
     endpoint = payload.get("endpoint", "/chat").lstrip("/")
     timeout = payload.get("timeout", 30)
 
@@ -36,7 +37,7 @@ def chat(payload: dict) -> dict:
 
     url = f"{gateway}/{endpoint}"
     try:
-        with httpx.Client(timeout=timeout, verify=False) as client:
+        with httpx.Client(timeout=timeout, verify=False, follow_redirects=True) as client:
             resp = client.post(url, json={"message": message})
             body = _format_response(resp.text, resp.headers.get("content-type", ""))
             return {"status": resp.status_code, "body": body}
