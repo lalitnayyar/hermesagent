@@ -13,6 +13,7 @@ const navItems = [
   { path: '/automation', label: 'Automation', icon: 'auto_mode' },
   { path: '/monitor', label: 'Monitor', icon: 'monitoring' },
   { path: '/chat-test', label: 'Chat Test', icon: 'chat' },
+  { path: '/logs', label: 'Logs', icon: 'receipt_long' },
   { path: '/settings', label: 'Settings', icon: 'settings' }
 ]
 

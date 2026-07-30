@@ -10,6 +10,7 @@ import Monitor from './pages/Monitor'
 import Mobile from './pages/Mobile'
 import Settings from './pages/Settings'
 import ChatTest from './pages/ChatTest'
+import Logs from './pages/Logs'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/mobile" element={<Mobile />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/chat-test" element={<ChatTest />} />
+        <Route path="/logs" element={<Logs />} />
       </Routes>
     </AppShell>
   )
