@@ -42,14 +42,23 @@ The static build is emitted to `dist/`. You can preview it with `npm run preview
 State is persisted to `localStorage` and all actions provide toast feedback. A live activity feed records every meaningful change.
 
 - **Dashboard** (`/`) - live fleet stats, recent running tasks, and agent fleet cards
+  ![Dashboard](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/dashboard.png)
 - **Agents** (`/agents`) - create, edit, delete, and run/pause agents
+  ![Agents](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/agents.png)
 - **Workflows** (`/workflows`) - create, save, publish, and delete visual workflows; drag-and-drop React Flow canvas with custom nodes and edges
+  ![Workflows](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/workflows.png)
 - **Tasks** (`/tasks`) - create tasks; run/pause/resume/retry/delete; status and domain filters; progress auto-simulates to completion
+  ![Tasks](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/tasks.png)
 - **Approvals** (`/approvals`) - approve/reject requests, risk distribution, and decision log
+  ![Approvals](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/approvals.png)
 - **Automation** (`/automation`) - trigger workflows that create tasks, toggle scheduled runs
+  ![Automation](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/automation.png)
 - **Monitor** (`/monitor`) - live throughput chart, toggle service health, and activity feed
+  ![Monitor](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/monitor.png)
 - **Mobile** (`/mobile`) - functional mobile companion for approvals, active tasks, and quick actions
+  ![Mobile companion](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/mobile-companion.png)
 - **Settings** (`/settings`) - persisted gateway, limits, and governance toggles
+  ![Settings](stitch_hermes_agentflow_studio/agentflow-studio-app/assets/screenshots/settings.png)
 
 ## Mobile / PWA
 
