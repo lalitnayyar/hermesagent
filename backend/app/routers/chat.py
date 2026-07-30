@@ -1,0 +1,44 @@
+import html as html_module
+import re
+
+import httpx
+from fastapi import APIRouter, HTTPException
+
+from backend.app.config import settings
+
+router = APIRouter(prefix="/api")
+
+
+def _format_response(text: str, content_type: str) -> str:
+    if "text/html" not in content_type:
+        return text
+
+    # Strip scripts, styles, and tags, then decode HTML entities
+    text = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = html_module.unescape(text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    if len(text) > 4000:
+        text = text[:4000] + "\n\n[truncated]"
+    return text
+
+
+@router.post("/chat")
+def chat(payload: dict) -> dict:
+    message = payload.get("message", "")
+    gateway = payload.get("gateway", settings.hermes_gateway_url).rstrip("/")
+    endpoint = payload.get("endpoint", "/chat").lstrip("/")
+    timeout = payload.get("timeout", 30)
+
+    if not message:
+        raise HTTPException(status_code=400, detail="message is required")
+
+    url = f"{gateway}/{endpoint}"
+    try:
+        with httpx.Client(timeout=timeout, verify=False) as client:
+            resp = client.post(url, json={"message": message})
+            body = _format_response(resp.text, resp.headers.get("content-type", ""))
+            return {"status": resp.status_code, "body": body}
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Chat request failed: {e}")
