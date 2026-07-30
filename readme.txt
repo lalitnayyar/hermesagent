@@ -23,12 +23,14 @@ Tech Stack
 Updated Features
 ----------------
 1. Workflow designer improvements
-   - Add new workflow blocks from the top toolbar.
-   - Select a block to edit its label, icon (Material Symbols name), and color
-     (primary / secondary / tertiary) in real time.
+   - Add new workflow blocks from the top toolbar or by dragging from the
+     Block Widget (Start, Agent, Action, Decision, Tool, End).
+   - Select a block to edit its label, icon (Material Symbols name), color
+     (primary / secondary / tertiary), and shape (rounded / diamond) in real time.
    - Delete selected blocks (removes attached edges automatically).
    - Save drag/edge changes with the Save button.
    - Create, publish, and delete workflows from the sidebar.
+   - Conditional (diamond) blocks for branching flows.
 
 2. Chat Test with Ollama
    - Added an Ollama-powered chat test page (`/chat-test`).
@@ -75,7 +77,8 @@ Application Functionality
 - Dashboard (`/`) - live fleet stats, recent running tasks, agent fleet cards.
 - Agents (`/agents`) - create, edit, delete, run/pause agents.
 - Workflows (`/workflows`) - visual designer with add/edit/delete blocks,
-  drag-and-drop React Flow canvas, save, publish, delete workflows.
+  drag-and-drop React Flow canvas, block widget, conditional diamond blocks,
+  conditional approval sample, save, publish, delete workflows.
 - Tasks (`/tasks`) - create, run/pause/resume/retry/delete tasks; progress
   auto-simulates to completion.
 - Approvals (`/approvals`) - approve/reject requests and view the decision log.

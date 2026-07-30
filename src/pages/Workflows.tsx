@@ -1,44 +1,169 @@
-import { useState, useCallback, useEffect, useMemo } from 'react'
-import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, addEdge, type Node, type Edge, type Connection, Handle, Position } from '@xyflow/react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, addEdge, useReactFlow, ReactFlowProvider, type Node, type Edge, type Connection, Handle, Position } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useAppStore, domains } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
 
-const WorkflowNode = ({ data }: { data: { label: string; icon: string; color: string } }) => (
-  <div className="bg-surface-container border border-outline-variant rounded-lg px-3 py-2 min-w-[140px] shadow-lg hover:border-primary/40 transition-colors cursor-pointer">
-    <Handle type="target" position={Position.Left} className="!bg-primary !w-2 !h-2" />
-    <div className="flex items-center gap-2">
-      <span className={cn('material-symbols-outlined', data.color === 'secondary' ? 'text-secondary' : data.color === 'tertiary' ? 'text-tertiary' : 'text-primary')}>{data.icon}</span>
-      <span className="text-xs font-semibold text-on-surface">{data.label}</span>
+interface WorkflowNodeData {
+  label: string
+  icon: string
+  color: string
+  shape?: string
+}
+
+type BlockTemplate = {
+  label: string
+  icon: string
+  color: 'primary' | 'secondary' | 'tertiary'
+  shape: 'rounded' | 'diamond'
+}
+
+const BLOCKS: BlockTemplate[] = [
+  { label: 'Start', icon: 'play_arrow', color: 'primary', shape: 'rounded' },
+  { label: 'Agent', icon: 'psychology', color: 'secondary', shape: 'rounded' },
+  { label: 'Action', icon: 'bolt', color: 'secondary', shape: 'rounded' },
+  { label: 'Decision', icon: 'question_mark', color: 'tertiary', shape: 'diamond' },
+  { label: 'Tool', icon: 'build', color: 'tertiary', shape: 'rounded' },
+  { label: 'End', icon: 'flag', color: 'primary', shape: 'rounded' }
+]
+
+const colorClass = (color?: string) =>
+  color === 'secondary' ? 'text-secondary' : color === 'tertiary' ? 'text-tertiary' : 'text-primary'
+
+const WorkflowNode = ({ id, data }: { id: string; data: Record<string, unknown> }) => {
+  const d = data as unknown as WorkflowNodeData
+  const setSelected = useAppStore((s) => s.setSelectedWorkflowNodeId)
+  const isDiamond = d.shape === 'diamond'
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelected(id)
+  }
+
+  return (
+    <div
+      onClick={handleClick}
+      className={cn(
+        'relative flex items-center justify-center shadow-lg hover:border-primary/40 transition-colors cursor-pointer',
+        isDiamond ? 'w-32 h-32' : 'bg-surface-container border border-outline-variant rounded-lg px-3 py-2 min-w-[140px]'
+      )}
+    >
+      {isDiamond ? (
+        <>
+          <div
+            className="absolute inset-0 m-auto w-24 h-24 bg-surface-container border border-outline-variant flex items-center justify-center"
+            style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
+          />
+          <div className="relative z-10 flex flex-col items-center justify-center text-center p-2">
+            <span className={cn('material-symbols-outlined text-[18px]', colorClass(d.color))}>{d.icon}</span>
+            <span className="text-[10px] font-semibold text-on-surface max-w-[80px] truncate">{d.label}</span>
+          </div>
+        </>
+      ) : (
+        <>
+          <Handle type="target" position={Position.Left} className="!bg-primary !w-2 !h-2" />
+          <div className="flex items-center gap-2">
+            <span className={cn('material-symbols-outlined', colorClass(d.color))}>{d.icon}</span>
+            <span className="text-xs font-semibold text-on-surface">{d.label}</span>
+          </div>
+          <Handle type="source" position={Position.Right} className="!bg-primary !w-2 !h-2" />
+        </>
+      )}
+      {isDiamond && (
+        <>
+          <Handle type="target" position={Position.Left} className="!bg-primary !w-2 !h-2" />
+          <Handle type="source" position={Position.Right} className="!bg-primary !w-2 !h-2" />
+        </>
+      )}
     </div>
-    <Handle type="source" position={Position.Right} className="!bg-primary !w-2 !h-2" />
-  </div>
-)
+  )
+}
 
 const nodeTypes = { workflowNode: WorkflowNode }
 
+interface FlowCanvasProps {
+  nodes: Node[]
+  edges: Edge[]
+  onNodesChange: (changes: any) => void
+  onEdgesChange: (changes: any) => void
+  onConnect: (params: Connection) => void
+  onPaneClick: () => void
+  onDropNode: (block: BlockTemplate, position: { x: number; y: number }) => void
+}
+
+const FlowCanvas = ({ nodes, edges, onNodesChange, onEdgesChange, onConnect, onPaneClick, onDropNode }: FlowCanvasProps) => {
+  const { screenToFlowPosition } = useReactFlow()
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+  }, [])
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault()
+      const raw = event.dataTransfer.getData('application/reactflow')
+      if (!raw) return
+      const block: BlockTemplate = JSON.parse(raw)
+      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY })
+      onDropNode(block, position)
+    },
+    [onDropNode, screenToFlowPosition]
+  )
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onConnect={onConnect}
+      onPaneClick={onPaneClick}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      nodeTypes={nodeTypes}
+      fitView
+      proOptions={{ hideAttribution: true }}
+    >
+      <Background gap={24} color="#1e293b" />
+      <Controls />
+      <MiniMap className="!bg-surface-container-low !border-outline-variant" nodeColor="#b4c5ff" maskColor="rgba(11,19,38,0.5)" />
+    </ReactFlow>
+  )
+}
+
 export default function Workflows() {
-  const { workflows, addWorkflow, updateWorkflowNodes, updateWorkflowEdges, publishWorkflow, deleteWorkflow, toast } = useAppStore()
+  const {
+    workflows,
+    addWorkflow,
+    updateWorkflowNodes,
+    updateWorkflowEdges,
+    publishWorkflow,
+    deleteWorkflow,
+    toast,
+    selectedWorkflowNodeId,
+    setSelectedWorkflowNodeId
+  } = useAppStore()
   const [selectedId, setSelectedId] = useState<string>(workflows[0]?.id ?? '')
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [newName, setNewName] = useState('')
   const [newDomain, setNewDomain] = useState(domains[0])
   const [nodeLabel, setNodeLabel] = useState('')
+  const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
   const selected = workflows.find((w) => w.id === selectedId) ?? workflows[0]
-  const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedNodeId), [nodes, selectedNodeId])
+  const selectedNode = nodes.find((n) => n.id === selectedWorkflowNodeId)
 
   useEffect(() => {
     if (selected) {
       setNodes(selected.nodes)
       setEdges(selected.edges)
-      setSelectedNodeId(null)
+      setSelectedWorkflowNodeId(null)
     }
-  }, [selected?.id, setNodes, setEdges])
+  }, [selected?.id, setNodes, setEdges, setSelectedWorkflowNodeId])
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#b4c5ff' } }, eds)),
@@ -71,15 +196,19 @@ export default function Workflows() {
     setNewName('')
   }
 
-  const addNode = () => {
-    if (!nodeLabel.trim() || !selected) return
-    const id = `node-${Date.now()}`
-    const newNode: Node = {
+  const createNode = (data: WorkflowNodeData, position: { x: number; y: number }) => {
+    const id = `node-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+    return {
       id,
       type: 'workflowNode',
-      position: { x: 200 + Math.random() * 200, y: 100 + Math.random() * 200 },
-      data: { label: nodeLabel, icon: 'hub', color: 'tertiary' }
-    }
+      position,
+      data: data as unknown as Record<string, unknown>
+    } as unknown as Node
+  }
+
+  const addNode = () => {
+    if (!nodeLabel.trim() || !selected) return
+    const newNode = createNode({ label: nodeLabel, icon: 'hub', color: 'tertiary', shape: 'rounded' }, { x: 200 + Math.random() * 200, y: 100 + Math.random() * 200 })
     const nextNodes = [...nodes, newNode]
     setNodes(nextNodes)
     updateWorkflowNodes(selected.id, nextNodes)
@@ -87,15 +216,24 @@ export default function Workflows() {
     toast('Block added', 'success')
   }
 
-  const updateSelectedNode = (updates: Partial<{ label: string; icon: string; color: string }>) => {
-    if (!selectedNode) return
+  const onDropNode = (block: BlockTemplate, position: { x: number; y: number }) => {
+    if (!selected) return
+    const newNode = createNode({ label: block.label, icon: block.icon, color: block.color, shape: block.shape }, position)
+    const nextNodes = [...nodes, newNode]
+    setNodes(nextNodes)
+    updateWorkflowNodes(selected.id, nextNodes)
+    toast(`${block.label} block added`, 'success')
+  }
+
+  const updateSelectedNode = (updates: Partial<WorkflowNodeData>) => {
+    if (!selectedNode || !selected) return
     const nextNodes = nodes.map((n) =>
       n.id === selectedNode.id
-        ? { ...n, data: { ...n.data, ...updates } as typeof n.data }
+        ? ({ ...n, data: { ...n.data, ...updates } as unknown as Record<string, unknown> } as Node)
         : n
-    )
+    ) as Node[]
     setNodes(nextNodes)
-    if (selected) updateWorkflowNodes(selected.id, nextNodes)
+    updateWorkflowNodes(selected.id, nextNodes)
   }
 
   const deleteSelectedNode = () => {
@@ -106,8 +244,13 @@ export default function Workflows() {
     setEdges(nextEdges)
     updateWorkflowNodes(selected.id, nextNodes)
     updateWorkflowEdges(selected.id, nextEdges)
-    setSelectedNodeId(null)
+    setSelectedWorkflowNodeId(null)
     toast('Block deleted', 'info')
+  }
+
+  const onDragStart = (event: React.DragEvent, block: BlockTemplate) => {
+    event.dataTransfer.setData('application/reactflow', JSON.stringify(block))
+    event.dataTransfer.effectAllowed = 'move'
   }
 
   return (
@@ -161,19 +304,19 @@ export default function Workflows() {
               <>
                 <div className="flex items-center bg-surface-container border border-outline-variant rounded-lg px-md py-1.5 gap-sm">
                   <input
-                    value={(selectedNode.data as { label: string; icon: string; color: string }).label ?? ''}
+                    value={(selectedNode.data as unknown as WorkflowNodeData)?.label ?? ''}
                     onChange={(e) => updateSelectedNode({ label: e.target.value })}
                     placeholder="Block label"
                     className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-28"
                   />
                   <input
-                    value={(selectedNode.data as { label: string; icon: string; color: string }).icon ?? ''}
+                    value={(selectedNode.data as unknown as WorkflowNodeData)?.icon ?? ''}
                     onChange={(e) => updateSelectedNode({ icon: e.target.value })}
                     placeholder="Icon"
                     className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-20"
                   />
                   <select
-                    value={(selectedNode.data as { label: string; icon: string; color: string }).color ?? 'primary'}
+                    value={(selectedNode.data as unknown as WorkflowNodeData)?.color ?? 'primary'}
                     onChange={(e) => updateSelectedNode({ color: e.target.value })}
                     className="bg-surface-container-high text-body-sm text-on-surface rounded px-sm py-0.5"
                   >
@@ -181,11 +324,19 @@ export default function Workflows() {
                     <option value="secondary">secondary</option>
                     <option value="tertiary">tertiary</option>
                   </select>
+                  <select
+                    value={(selectedNode.data as unknown as WorkflowNodeData)?.shape ?? 'rounded'}
+                    onChange={(e) => updateSelectedNode({ shape: e.target.value })}
+                    className="bg-surface-container-high text-body-sm text-on-surface rounded px-sm py-0.5"
+                  >
+                    <option value="rounded">rounded</option>
+                    <option value="diamond">diamond</option>
+                  </select>
                 </div>
                 <button onClick={deleteSelectedNode} className="p-sm hover:bg-error-container hover:text-on-error-container rounded-full text-on-surface-variant transition-colors">
                   <span className="material-symbols-outlined text-[20px]">delete</span>
                 </button>
-                <button onClick={() => setSelectedNodeId(null)} className="px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface transition-colors font-semibold">
+                <button onClick={() => setSelectedWorkflowNodeId(null)} className="px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface transition-colors font-semibold">
                   Deselect
                 </button>
               </>
@@ -214,24 +365,19 @@ export default function Workflows() {
             </button>
           </div>
         </div>
-        <div className="relative flex-1">
+        <div ref={reactFlowWrapper} className="relative flex-1">
           {selected ? (
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-              onPaneClick={() => setSelectedNodeId(null)}
-              nodeTypes={nodeTypes}
-              fitView
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background gap={24} color="#1e293b" />
-              <Controls />
-              <MiniMap className="!bg-surface-container-low !border-outline-variant" nodeColor="#b4c5ff" maskColor="rgba(11,19,38,0.5)" />
-            </ReactFlow>
+            <ReactFlowProvider>
+              <FlowCanvas
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onPaneClick={() => setSelectedWorkflowNodeId(null)}
+                onDropNode={onDropNode}
+              />
+            </ReactFlowProvider>
           ) : (
             <div className="flex h-full items-center justify-center text-on-surface-variant">
               No workflow selected. Create one to start designing.
@@ -239,6 +385,38 @@ export default function Workflows() {
           )}
         </div>
       </section>
+
+      <aside className="w-full lg:w-56 shrink-0 bg-surface-container-low border border-outline-variant rounded-xl flex flex-col overflow-hidden">
+        <div className="p-md border-b border-outline-variant">
+          <h3 className="font-label-xs text-label-xs text-outline uppercase tracking-widest">Block Widget</h3>
+          <p className="text-[11px] text-on-surface-variant mt-xs">Drag a block onto the canvas</p>
+        </div>
+        <div className="flex-1 overflow-y-auto p-md space-y-sm">
+          {BLOCKS.map((block) => (
+            <div
+              key={block.label}
+              draggable
+              onDragStart={(e) => onDragStart(e, block)}
+              className="flex items-center gap-sm p-sm rounded-lg bg-surface-container border border-outline-variant hover:border-primary/40 cursor-grab active:cursor-grabbing transition-colors"
+            >
+              <span className={cn('material-symbols-outlined', colorClass(block.color))}>{block.icon}</span>
+              <span className="text-body-sm text-on-surface font-medium">{block.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="p-md border-t border-outline-variant space-y-sm">
+          <h4 className="font-label-xs text-label-xs text-outline uppercase tracking-wider">Sample</h4>
+          <button
+            onClick={() => setSelectedId('wf-conditional-approval')}
+            className="w-full text-left p-sm rounded-lg bg-surface-container border border-outline-variant hover:border-primary/40 transition-colors"
+          >
+            <div className="flex items-center gap-sm">
+              <span className="material-symbols-outlined text-tertiary">account_tree</span>
+              <span className="text-body-sm text-on-surface">Conditional Approval</span>
+            </div>
+          </button>
+        </div>
+      </aside>
 
       <Modal open={modalOpen} title="New Workflow" onClose={() => setModalOpen(false)}>
         <div className="space-y-md">

@@ -112,6 +112,28 @@ function defaultWorkflowEdges(): Edge[] {
   ]
 }
 
+function conditionalWorkflowNodes(): Node[] {
+  return [
+    { id: 'start', type: 'workflowNode', position: { x: 40, y: 220 }, data: { label: 'Start', icon: 'play_arrow', color: 'primary', shape: 'rounded' } },
+    { id: 'check', type: 'workflowNode', position: { x: 220, y: 220 }, data: { label: 'Check Risk', icon: 'monitoring', color: 'secondary', shape: 'rounded' } },
+    { id: 'decision', type: 'workflowNode', position: { x: 460, y: 220 }, data: { label: 'Risk > 50%?', icon: 'question_mark', color: 'tertiary', shape: 'diamond' } },
+    { id: 'approve', type: 'workflowNode', position: { x: 720, y: 120 }, data: { label: 'Approve', icon: 'check_circle', color: 'secondary', shape: 'rounded' } },
+    { id: 'reject', type: 'workflowNode', position: { x: 720, y: 320 }, data: { label: 'Reject', icon: 'cancel', color: 'tertiary', shape: 'rounded' } },
+    { id: 'end', type: 'workflowNode', position: { x: 960, y: 220 }, data: { label: 'End', icon: 'flag', color: 'primary', shape: 'rounded' } }
+  ]
+}
+
+function conditionalWorkflowEdges(): Edge[] {
+  return [
+    { id: 'e-start-check', source: 'start', target: 'check', animated: true, style: { stroke: '#b4c5ff' } },
+    { id: 'e-check-decision', source: 'check', target: 'decision', animated: true, style: { stroke: '#b4c5ff' } },
+    { id: 'e-decision-approve', source: 'decision', target: 'approve', label: 'No', animated: true, style: { stroke: '#b4c5ff' } },
+    { id: 'e-decision-reject', source: 'decision', target: 'reject', label: 'Yes', animated: true, style: { stroke: '#b4c5ff' } },
+    { id: 'e-approve-end', source: 'approve', target: 'end', animated: true, style: { stroke: '#b4c5ff' } },
+    { id: 'e-reject-end', source: 'reject', target: 'end', animated: true, style: { stroke: '#b4c5ff' } }
+  ]
+}
+
 function nowLabel() {
   return formatDistanceToNow(Date.now(), { addSuffix: true })
 }
@@ -138,6 +160,8 @@ interface AppState {
   updateWorkflowEdges: (id: string, edges: Edge[]) => void
   publishWorkflow: (id: string) => void
   deleteWorkflow: (id: string) => void
+  selectedWorkflowNodeId: string | null
+  setSelectedWorkflowNodeId: (id: string | null) => void
 
   addTask: (title: string, domain: string, workflow: string, agent: string) => Task
   updateTask: (id: string, updates: Partial<Task>) => void
@@ -165,7 +189,9 @@ export const useAppStore = create<AppState>()(
       agents: initialAgents.map((a, i) => ({ ...a, color: agentColors[i % agentColors.length] })) as Agent[],
       tasks: initialTasks as Task[],
       approvals: initialApprovals.map((a) => ({ ...a, status: 'pending' as ApprovalStatus, risk: a.risk as Approval['risk'] })),
+      selectedWorkflowNodeId: null,
       workflows: [
+        { id: 'wf-conditional-approval', name: 'Conditional Approval (sample)', domain: 'Banking', status: 'published', nodes: conditionalWorkflowNodes(), edges: conditionalWorkflowEdges() },
         { id: 'wf-ai-assistant', name: 'AI Solution Architecture Assistant', domain: 'AI', status: 'published', nodes: defaultWorkflowNodes('AI Architect'), edges: defaultWorkflowEdges() },
         { id: 'wf-rag-design', name: 'RAG Application Design', domain: 'AI', status: 'published', nodes: defaultWorkflowNodes('RAG Designer'), edges: defaultWorkflowEdges() },
         { id: 'wf-complaint', name: 'Banking Customer Complaint Triage', domain: 'Banking', status: 'published', nodes: defaultWorkflowNodes('Triage Agent'), edges: defaultWorkflowEdges() },
@@ -262,6 +288,9 @@ export const useAppStore = create<AppState>()(
         set((state) => ({ workflows: state.workflows.filter((w) => w.id !== id) }))
         get().toast('Workflow deleted', 'warning')
         get().addActivity(`Workflow ${id} deleted`, 'warning')
+      },
+      setSelectedWorkflowNodeId: (id) => {
+        set(() => ({ selectedWorkflowNodeId: id }))
       },
 
       addTask: (title, domain, workflow, agent) => {
