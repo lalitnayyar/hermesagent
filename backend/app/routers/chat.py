@@ -1,4 +1,5 @@
 import html as html_module
+import json
 import re
 
 import httpx
@@ -58,7 +59,26 @@ def chat(payload: dict) -> dict:
     try:
         with httpx.Client(timeout=timeout, verify=False, follow_redirects=True) as client:
             resp = client.post(url, json=body, headers=headers, auth=auth)
-            response_text = _format_response(resp.text, resp.headers.get("content-type", ""))
+            try:
+                data = resp.json()
+            except Exception:
+                data = None
+
+            if isinstance(data, dict) and "choices" in data:
+                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                model = data.get("model", "")
+                usage = data.get("usage", {})
+                prompt = usage.get("prompt_tokens", 0)
+                completion = usage.get("completion_tokens", 0)
+                total = usage.get("total_tokens", 0)
+                response_text = content
+                if model:
+                    response_text += f"\n\nModel: {model}"
+                if total:
+                    response_text += f"\nTokens: {prompt} prompt / {completion} completion / {total} total"
+            else:
+                response_text = _format_response(resp.text, resp.headers.get("content-type", ""))
+
             return {"status": resp.status_code, "body": response_text}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Chat request failed: {e}")
