@@ -128,6 +128,10 @@ User Guide
        curl http://127.0.0.1:3080/api/health
 
 
+Interactive Container Manager (`manage-containers.sh`)
+------------------------------------------------------
+    ./manage-containers.sh    Interactive start/stop/rebuild for all containers
+
 Management Script (`manage.sh`)
 -------------------------------
     ./manage.sh deploy        Clone/pull, build and start AgentFlow

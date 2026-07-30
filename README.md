@@ -155,6 +155,14 @@ http://hermes-agent:9119
    curl http://127.0.0.1:3080/api/health
    ```
 
+## Container Management
+
+The interactive `manage-containers.sh` script lets you start, stop, rebuild and view logs for AgentFlow and Hermes:
+
+```bash
+./manage-containers.sh
+```
+
 ## Management Script (`manage.sh`)
 
 ```text
