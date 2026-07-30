@@ -36,9 +36,13 @@ def chat(payload: dict) -> dict:
         raise HTTPException(status_code=400, detail="message is required")
 
     url = f"{gateway}/{endpoint}"
+    headers = {}
+    if settings.hermes_api_server_key:
+        headers["Authorization"] = f"Bearer {settings.hermes_api_server_key}"
+
     try:
         with httpx.Client(timeout=timeout, verify=False, follow_redirects=True) as client:
-            resp = client.post(url, json={"message": message})
+            resp = client.post(url, json={"message": message}, headers=headers)
             body = _format_response(resp.text, resp.headers.get("content-type", ""))
             return {"status": resp.status_code, "body": body}
     except Exception as e:
