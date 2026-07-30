@@ -2,138 +2,112 @@ Hermes AgentFlow Studio
 =======================
 
 A modern, responsive web application for the Hermes AgentFlow Studio multi-agent
-orchestration platform. It provides a React frontend, FastAPI backend, SQLite
-data store, and Docker orchestration for both AgentFlow and the Hermes
+orchestration platform. It provides a React/TypeScript frontend, FastAPI backend,
+SQLite data store, and Docker orchestration for both AgentFlow and the Hermes
 agent/gateway.
-
 
 Tech Stack
 ----------
 - Vite + React 18 + TypeScript
-- Tailwind CSS (custom design tokens)
+- Tailwind CSS with custom design tokens
 - React Router
-- Zustand (global state + persistence)
+- Zustand (global state + localStorage persistence)
 - @xyflow/react (workflow designer)
 - Recharts (monitoring charts)
 - vite-plugin-pwa
 - FastAPI + SQLAlchemy (backend)
-- Docker Compose (orchestration)
+- Docker Compose
 
-
-Updated Features
-----------------
-1. Workflow designer improvements
-   - Add new workflow blocks from the top toolbar or by dragging from the
-     Block Widget (Start, Agent, Action, Decision, Tool, Output, End).
-   - Select a block to edit its label, icon (Material Symbols name), color
-     (primary / secondary / tertiary), and shape (rounded / diamond) in real time.
-   - Tool blocks have a Tool name and a Code / command field.
-   - Output blocks display the result of a workflow test run.
-   - Run a workflow to trace the flow and see test output.
-   - Delete selected blocks (removes attached edges automatically).
-   - Save drag/edge changes with the Save button.
-   - Create, publish, and delete workflows from the sidebar.
+Features
+--------
+1. Workflow designer
+   - Drag-and-drop React Flow canvas.
+   - Block palette: Start, Agent, Action, Decision, Tool, Output, End.
+   - Tool blocks have Tool name and Code fields.
+   - Output blocks display workflow test-run results.
+   - Run button traces the flow and shows test output.
    - Conditional (diamond) blocks for branching flows.
+   - Create, save, publish, and delete workflows.
 
-2. Chat Test with Ollama
-   - Added an Ollama-powered chat test page (`/chat-test`).
-   - Backend endpoint: `POST /api/ollama`.
-   - Configurable Ollama host and model; uses the host from Settings by default.
+2. Chat Test
+   - Send messages to Hermes and Ollama from the UI.
+   - Configurable Hermes Gateway URL, Ollama host, and model.
+   - Backend normalizes localhost/127.0.0.1 to Docker-friendly addresses.
 
-3. Hermes agent / gateway integration
+3. Settings
+   - Persisted Hermes API URL, Hermes Gateway URL, and Ollama host.
+   - Each URL has a Test button that verifies reachability and shows response.
+   - Defaults/limits and governance toggles.
+
+4. Activity Logs
+   - Dedicated `/logs` page showing the full application activity feed.
+   - Filter by Info, Success, Warning, and Error.
+
+5. Hermes agent / gateway integration
    - `manage.sh start-hermes` starts the Hermes Agent/Gateway container.
    - `manage.sh stop-hermes` stops it.
-   - The AgentFlow backend health check reports Hermes reachability and version.
-   - Backend `HermesClient` talks to the Hermes API on port 8642.
+   - AgentFlow backend health check reports Hermes reachability and version.
 
-4. Docker fixes
-   - Fixed backend and worker Dockerfiles to use `COPY backend /app/backend` and
-     the correct `backend.app.main:app` / `backend.worker` module paths.
-   - `manage.sh` now ensures the `hermes-network` exists before starting.
-   - Hermes is launched in its own Docker project (`--project-name hermes`) so it
-     does not appear as an orphan in the AgentFlow project.
+6. Docker fixes
+   - Backend and worker Dockerfiles use correct module paths.
+   - `manage.sh` ensures `hermes-network` exists before starting.
+   - Hermes is launched in its own Docker project to avoid orphan warnings.
 
+Hermes & Ollama Networking
+--------------------------
+- AgentFlow backend runs inside Docker.
+- Hermes API in Docker is reachable at `http://hermes-agent:8642`.
+- Hermes dashboard/gateway in Docker is reachable at `http://hermes-agent:9119`.
+- Ollama on the host is reachable from Docker via
+  `http://host.docker.internal:11434`.
+- Start Ollama so Docker can reach it:
 
-Hermes Access
--------------
-Start Hermes:
-    ./manage.sh start-hermes
+      OLLAMA_HOST=0.0.0.0:11434 ollama serve
 
-This creates `docker-compose.hermes.yml` (gitignored) and starts:
-- Hermes Agent API on `0.0.0.0:8642`
-- Hermes dashboard on `http://hermes-agent:9119` (inside Docker)
-
-From the host you can reach the API at:
-    http://127.0.0.1:8642
-
-From AgentFlow containers (backend, worker) the service is at:
-    http://hermes-agent:8642
-    http://hermes-agent:9119
-
-Note: If `127.0.0.1:9119` is already in use by a local Hermes process, the
-Docker Hermes dashboard is not bound to the host port. It is still accessible
-from the AgentFlow backend on the Docker network.
-
-
-Application Functionality
--------------------------
-- Dashboard (`/`) - live fleet stats, recent running tasks, agent fleet cards.
-- Agents (`/agents`) - create, edit, delete, run/pause agents.
-- Workflows (`/workflows`) - visual designer with add/edit/delete blocks,
-  drag-and-drop React Flow canvas, block widget, conditional diamond blocks,
-  conditional approval sample, save, publish, delete workflows.
-- Tasks (`/tasks`) - create, run/pause/resume/retry/delete tasks; progress
-  auto-simulates to completion.
-- Approvals (`/approvals`) - approve/reject requests and view the decision log.
-- Automation (`/automation`) - trigger workflows that create tasks and toggle
-  scheduled runs.
-- Monitor (`/monitor`) - live throughput chart, service health toggle, activity
-  feed.
-- Mobile (`/mobile`) - mobile companion for approvals, active tasks, quick
-  actions.
-- Settings (`/settings`) - persisted gateway, Ollama host, limits, and
-  governance toggles. Each URL has a Test button to verify reachability before
-  saving.
-- Chat Test (`/chat-test`) - test Ollama chat locally.
-
+- Localhost/127.0.0.1 URLs entered in Chat Test/Settings are automatically
+  translated to the correct Docker hostnames by the backend.
 
 User Guide
 ----------
 1. Copy the environment file:
+
        cp .env.example .env
 
-2. Fill in any required keys in `.env` (for example `HERMES_API_SERVER_KEY` if
-   your Hermes API is key-protected).
+2. Fill in `.env`, especially:
+   - `HERMES_API_SERVER_KEY` if your Hermes API is key-protected.
+   - `HERMES_NETWORK` pointing to the Docker network with Hermes.
 
-3. Start Hermes (optional; only if you want the real Hermes backend):
+3. Start Hermes:
+
        ./manage.sh start-hermes
 
-4. Start AgentFlow in one of the following ways:
-   - Development (host processes, no Docker):
-         # Terminal 1
-         bridge/.venv/bin/python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8080
-         # Terminal 2
-         npm install
-         npm run dev
-   - Production-style Docker:
-         ./manage.sh deploy
-   - Quick Docker rebuild after code changes:
-         ./manage.sh stop
-         docker compose -f docker-compose.yml up -d --build
+4. Start Ollama on all interfaces (optional):
 
-5. Open the UI:
+       OLLAMA_HOST=0.0.0.0:11434 ollama serve
+
+5. Start AgentFlow:
+
+       ./manage.sh start
+   or with a full rebuild:
+
+       docker compose -f docker-compose.yml up -d --build
+
+6. Open the UI:
+
        http://127.0.0.1:3080
 
-6. Verify backend health (via the Nginx proxy):
+7. Verify the backend:
+
        curl http://127.0.0.1:3080/api/health
 
+Management Scripts
+------------------
+Interactive container manager (`manage-containers.sh`):
 
-Interactive Container Manager (`manage-containers.sh`)
-------------------------------------------------------
-    ./manage-containers.sh    Interactive start/stop/rebuild for all containers
+    ./manage-containers.sh    Start/stop/rebuild and view logs for all containers
 
-Management Script (`manage.sh`)
--------------------------------
+`manage.sh` commands:
+
     ./manage.sh deploy        Clone/pull, build and start AgentFlow
     ./manage.sh start         Start AgentFlow services
     ./manage.sh stop          Stop AgentFlow services
@@ -147,12 +121,27 @@ Management Script (`manage.sh`)
     ./manage.sh restore       Restore SQLite data
     ./manage.sh prune         Clean Docker images/volumes
 
+Troubleshooting
+---------------
+- Hermes `api_server` cannot bind `127.0.0.1:8642`:
+  Port 8642 is in use. Stop the conflicting process, or change
+  `platforms.api_server.port` in Hermes `config.yaml` and restart:
+
+      ./manage.sh stop-hermes
+      ./manage.sh start-hermes
+
+- Ollama `Connection refused` from Chat Test:
+  Ollama is not running or is bound only to `127.0.0.1`.
+  Start it with `OLLAMA_HOST=0.0.0.0:11434`.
+
+- Hermes chat returns the sign-in page (200):
+  `Send to Hermes` is posting to the dashboard.
+  Set `HERMES_API_SERVER_KEY` in `.env` and restart the backend container.
 
 Notes
 -----
-- AgentFlow state is persisted to `localStorage` in the browser.
+- Application state is persisted to `localStorage`; a version migration keeps
+  default URLs up to date when they change.
 - The SQLite database is stored in `data/agentflow` (mounted into the backend
   container).
 - `docker-compose.hermes.yml` is generated by `manage.sh` and is gitignored.
-- To reach Ollama from the Docker backend, start Ollama with
-  `OLLAMA_HOST=0.0.0.0:11434`.
