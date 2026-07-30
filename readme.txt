@@ -56,8 +56,10 @@ Features
 Hermes & Ollama Networking
 --------------------------
 - AgentFlow backend runs inside Docker.
-- Hermes API in Docker is reachable at `http://hermes-agent:8642`.
-- Hermes dashboard/gateway in Docker is reachable at `http://hermes-agent:9119`.
+- Hermes API is exposed on the host at `http://127.0.0.1:8642` and in Docker at
+  `http://hermes-agent:8642`.
+- Hermes dashboard is exposed on the host at `http://127.0.0.1:9119` and in
+  Docker at `http://hermes-agent:9119`.
 - Ollama on the host is reachable from Docker via
   `http://host.docker.internal:11434`.
 - Start Ollama so Docker can reach it:

@@ -29,9 +29,6 @@ ensure_hermes_network() {
 }
 
 write_hermes_compose() {
-  if [ -f "${HERMES_COMPOSE_FILE}" ]; then
-    return
-  fi
   echo "Writing ${HERMES_COMPOSE_FILE}..."
   cat > "${HERMES_COMPOSE_FILE}" <<'EOF'
 services:
@@ -52,6 +49,7 @@ services:
       HERMES_DASHBOARD_PORT: "9119"
     ports:
       - "8642:8642"
+      - "9119:9119"
     volumes:
       - hermes-agent-data:/opt/data
     networks:
@@ -142,8 +140,8 @@ start_hermes() {
   cd "$PROJECT_DIR"
   docker compose --project-name hermes -f "$HERMES_COMPOSE_FILE" up -d
   echo "Hermes Agent/Gateway started."
-  echo "API:    http://127.0.0.1:8642"
-  echo "Dashboard (inside Docker): http://hermes-agent:9119"
+  echo "API:       http://127.0.0.1:8642"
+  echo "Dashboard: http://127.0.0.1:9119"
 }
 
 stop_hermes() {
