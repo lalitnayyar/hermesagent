@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config import settings
 from backend.app.database import Base, engine
-from backend.app.routers import api
+from backend.app.routers import api, chat, ollama
 
 
 def create_app() -> FastAPI:
@@ -20,6 +20,8 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api.router)
+    app.include_router(chat.router)
+    app.include_router(ollama.router)
 
     @app.get("/")
     def root() -> dict:

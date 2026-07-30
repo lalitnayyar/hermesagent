@@ -12,6 +12,7 @@ const navItems = [
   { path: '/approvals', label: 'Approvals', icon: 'fact_check' },
   { path: '/automation', label: 'Automation', icon: 'auto_mode' },
   { path: '/monitor', label: 'Monitor', icon: 'monitoring' },
+  { path: '/chat-test', label: 'Chat Test', icon: 'chat' },
   { path: '/settings', label: 'Settings', icon: 'settings' }
 ]
 

@@ -25,6 +25,7 @@ data/
 
 # Generated reports
 testreport.md
+docker-compose.hermes.yml
 
 # OS
 .DS_Store

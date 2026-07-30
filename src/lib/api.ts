@@ -64,5 +64,13 @@ export const api = {
 
   // Runs / progress
   run: (type: string, payload: Record<string, unknown>) => fetchJson<{ runId: string }>('/run', { method: 'POST', body: JSON.stringify({ type, payload }) }),
-  streamEvents: (runId: string) => new EventSource(`/api/run/${runId}/events`)
+  streamEvents: (runId: string) => new EventSource(`/api/run/${runId}/events`),
+
+  // Chat test
+  chat: (payload: { message: string; gateway?: string; endpoint?: string }) =>
+    fetchJson<{ status: number; body: string }>('/chat', { method: 'POST', body: JSON.stringify(payload) }),
+
+  // Ollama chat
+  ollama: (payload: { message: string; model?: string }) =>
+    fetchJson<{ status: number; body: string }>('/ollama', { method: 'POST', body: JSON.stringify(payload) }),
 }

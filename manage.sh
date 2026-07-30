@@ -9,6 +9,8 @@ PROJECT_DIR="${PROJECT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
 BACKUP_DIR="${PROJECT_DIR}/backups"
 DATA_DIR="${PROJECT_DIR}/data/agentflow"
+HERMES_COMPOSE_FILE="${PROJECT_DIR}/docker-compose.hermes.yml"
+HERMES_NETWORK="${HERMES_NETWORK:-hermes-network}"
 
 check_prereqs() {
   for cmd in docker git curl; do
@@ -17,6 +19,57 @@ check_prereqs() {
       exit 1
     fi
   done
+}
+
+ensure_hermes_network() {
+  if ! docker network ls --format '{{.Name}}' | grep -qx "${HERMES_NETWORK}"; then
+    echo "Creating Docker network: ${HERMES_NETWORK}"
+    docker network create "${HERMES_NETWORK}"
+  fi
+}
+
+write_hermes_compose() {
+  if [ -f "${HERMES_COMPOSE_FILE}" ]; then
+    return
+  fi
+  echo "Writing ${HERMES_COMPOSE_FILE}..."
+  cat > "${HERMES_COMPOSE_FILE}" <<'EOF'
+services:
+  hermes-agent:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-agent
+    restart: unless-stopped
+    command: ["gateway", "run"]
+    env_file:
+      - ../../configref/.env
+    environment:
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"
+      API_SERVER_PORT: "8642"
+      HERMES_UID: "10010"
+      HERMES_DASHBOARD: "1"
+      HERMES_DASHBOARD_HOST: "0.0.0.0"
+      HERMES_DASHBOARD_PORT: "9119"
+    ports:
+      - "8642:8642"
+    volumes:
+      - hermes-agent-data:/opt/data
+    networks:
+      - hermes-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8642/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+volumes:
+  hermes-agent-data:
+
+networks:
+  hermes-network:
+    external: true
+EOF
 }
 
 ensure_repo_url() {
@@ -44,6 +97,7 @@ deploy() {
   check_prereqs
   ensure_repo_url
   clone_or_pull
+  ensure_hermes_network
   cd "$PROJECT_DIR"
   echo "Building Docker images and starting services..."
   docker compose -f "$COMPOSE_FILE" up -d --build
@@ -52,6 +106,7 @@ deploy() {
 
 update() {
   check_prereqs
+  ensure_hermes_network
   cd "$PROJECT_DIR"
   echo "Pulling latest changes..."
   git pull
@@ -63,6 +118,7 @@ update() {
 
 start() {
   check_prereqs
+  ensure_hermes_network
   cd "$PROJECT_DIR"
   docker compose -f "$COMPOSE_FILE" up -d
   echo "Started. Frontend: http://localhost:${AGENTFLOW_FRONTEND_PORT:-3080}"
@@ -77,6 +133,23 @@ stop() {
 restart() {
   stop
   start
+}
+
+start_hermes() {
+  check_prereqs
+  ensure_hermes_network
+  write_hermes_compose
+  cd "$PROJECT_DIR"
+  docker compose --project-name hermes -f "$HERMES_COMPOSE_FILE" up -d
+  echo "Hermes Agent/Gateway started."
+  echo "API:    http://127.0.0.1:8642"
+  echo "Dashboard (inside Docker): http://hermes-agent:9119"
+}
+
+stop_hermes() {
+  cd "$PROJECT_DIR"
+  docker compose --project-name hermes -f "$HERMES_COMPOSE_FILE" down
+  echo "Hermes Agent/Gateway stopped."
 }
 
 status() {
@@ -144,19 +217,21 @@ menu() {
   echo "Project: ${PROJECT_DIR}"
   echo "Compose: ${COMPOSE_FILE}"
   echo
-  echo "1) deploy   - Clone/pull repo and start"
-  echo "2) update   - Pull latest and rebuild"
-  echo "3) start    - Start services"
-  echo "4) stop     - Stop services"
-  echo "5) restart  - Restart services"
-  echo "6) status   - Show status and health"
-  echo "7) logs     - Follow logs"
-  echo "8) shell    - Open container shell"
-  echo "9) backup   - Backup SQLite data"
-  echo "10) restore - Restore SQLite data"
-  echo "11) prune   - Clean Docker resources"
+  echo "1) deploy       - Clone/pull repo and start"
+  echo "2) update       - Pull latest and rebuild"
+  echo "3) start        - Start services"
+  echo "4) stop         - Stop services"
+  echo "5) restart      - Restart services"
+  echo "6) status       - Show status and health"
+  echo "7) logs         - Follow logs"
+  echo "8) shell        - Open container shell"
+  echo "9) backup       - Backup SQLite data"
+  echo "10) restore     - Restore SQLite data"
+  echo "11) prune       - Clean Docker resources"
+  echo "12) start-hermes - Start Hermes agent/gateway"
+  echo "13) stop-hermes  - Stop Hermes agent/gateway"
   echo
-  read -rp "Choose an action [1-11]: " choice
+  read -rp "Choose an action [1-13]: " choice
   case "$choice" in
     1) deploy ;;
     2) update ;;
@@ -169,6 +244,8 @@ menu() {
     9) backup ;;
     10) restore ;;
     11) prune ;;
+    12) start_hermes ;;
+    13) stop_hermes ;;
     *) echo "Invalid choice."; exit 1 ;;
   esac
 }
@@ -180,6 +257,12 @@ main() {
     deploy|update|start|stop|restart|status|backup|restore|prune)
       "$command" "$@"
       ;;
+    start-hermes)
+      start_hermes "$@"
+      ;;
+    stop-hermes)
+      stop_hermes "$@"
+      ;;
     logs|shell)
       "$command" "$@"
       ;;
@@ -188,7 +271,7 @@ main() {
       ;;
     *)
       echo "Unknown command: $command"
-      echo "Usage: $0 [deploy|update|start|stop|restart|status|logs|shell|backup|restore|prune]"
+      echo "Usage: $0 [deploy|update|start|stop|restart|status|logs|shell|backup|restore|prune|start-hermes|stop-hermes]"
       exit 1
       ;;
   esac

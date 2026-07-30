@@ -9,6 +9,7 @@ import Automation from './pages/Automation'
 import Monitor from './pages/Monitor'
 import Mobile from './pages/Mobile'
 import Settings from './pages/Settings'
+import ChatTest from './pages/ChatTest'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/monitor" element={<Monitor />} />
         <Route path="/mobile" element={<Mobile />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/chat-test" element={<ChatTest />} />
       </Routes>
     </AppShell>
   )

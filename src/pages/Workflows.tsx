@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, addEdge, type Node, type Edge, type Connection, Handle, Position } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useAppStore, domains } from '@/lib/store'
@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
 
 const WorkflowNode = ({ data }: { data: { label: string; icon: string; color: string } }) => (
-  <div className="bg-surface-container border border-outline-variant rounded-lg px-3 py-2 min-w-[140px] shadow-lg hover:border-primary/40 transition-colors">
+  <div className="bg-surface-container border border-outline-variant rounded-lg px-3 py-2 min-w-[140px] shadow-lg hover:border-primary/40 transition-colors cursor-pointer">
     <Handle type="target" position={Position.Left} className="!bg-primary !w-2 !h-2" />
     <div className="flex items-center gap-2">
       <span className={cn('material-symbols-outlined', data.color === 'secondary' ? 'text-secondary' : data.color === 'tertiary' ? 'text-tertiary' : 'text-primary')}>{data.icon}</span>
@@ -23,17 +23,20 @@ export default function Workflows() {
   const [selectedId, setSelectedId] = useState<string>(workflows[0]?.id ?? '')
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [newName, setNewName] = useState('')
   const [newDomain, setNewDomain] = useState(domains[0])
   const [nodeLabel, setNodeLabel] = useState('')
 
   const selected = workflows.find((w) => w.id === selectedId) ?? workflows[0]
+  const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedNodeId), [nodes, selectedNodeId])
 
   useEffect(() => {
     if (selected) {
       setNodes(selected.nodes)
       setEdges(selected.edges)
+      setSelectedNodeId(null)
     }
   }, [selected?.id, setNodes, setEdges])
 
@@ -71,16 +74,40 @@ export default function Workflows() {
   const addNode = () => {
     if (!nodeLabel.trim() || !selected) return
     const id = `node-${Date.now()}`
-    setNodes((nds) => [
-      ...nds,
-      {
-        id,
-        type: 'workflowNode',
-        position: { x: 200 + Math.random() * 200, y: 100 + Math.random() * 200 },
-        data: { label: nodeLabel, icon: 'hub', color: 'tertiary' }
-      }
-    ])
+    const newNode: Node = {
+      id,
+      type: 'workflowNode',
+      position: { x: 200 + Math.random() * 200, y: 100 + Math.random() * 200 },
+      data: { label: nodeLabel, icon: 'hub', color: 'tertiary' }
+    }
+    const nextNodes = [...nodes, newNode]
+    setNodes(nextNodes)
+    updateWorkflowNodes(selected.id, nextNodes)
     setNodeLabel('')
+    toast('Block added', 'success')
+  }
+
+  const updateSelectedNode = (updates: Partial<{ label: string; icon: string; color: string }>) => {
+    if (!selectedNode) return
+    const nextNodes = nodes.map((n) =>
+      n.id === selectedNode.id
+        ? { ...n, data: { ...n.data, ...updates } as typeof n.data }
+        : n
+    )
+    setNodes(nextNodes)
+    if (selected) updateWorkflowNodes(selected.id, nextNodes)
+  }
+
+  const deleteSelectedNode = () => {
+    if (!selected || !selectedNode) return
+    const nextNodes = nodes.filter((n) => n.id !== selectedNode.id)
+    const nextEdges = edges.filter((e) => e.source !== selectedNode.id && e.target !== selectedNode.id)
+    setNodes(nextNodes)
+    setEdges(nextEdges)
+    updateWorkflowNodes(selected.id, nextNodes)
+    updateWorkflowEdges(selected.id, nextEdges)
+    setSelectedNodeId(null)
+    toast('Block deleted', 'info')
   }
 
   return (
@@ -129,11 +156,45 @@ export default function Workflows() {
               {selected?.status}
             </span>
           </div>
-          <div className="flex items-center gap-xs">
-            <div className="hidden md:flex items-center bg-surface-container border border-outline-variant rounded-lg px-md py-1.5">
-              <input value={nodeLabel} onChange={(e) => setNodeLabel(e.target.value)} placeholder="Step label" className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-28" />
-              <button onClick={addNode} disabled={!nodeLabel.trim()} className="text-primary disabled:text-outline font-label-xs text-label-xs uppercase font-bold ml-sm">Add</button>
-            </div>
+          <div className="flex items-center gap-xs flex-wrap">
+            {selectedNode ? (
+              <>
+                <div className="flex items-center bg-surface-container border border-outline-variant rounded-lg px-md py-1.5 gap-sm">
+                  <input
+                    value={(selectedNode.data as { label: string; icon: string; color: string }).label ?? ''}
+                    onChange={(e) => updateSelectedNode({ label: e.target.value })}
+                    placeholder="Block label"
+                    className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-28"
+                  />
+                  <input
+                    value={(selectedNode.data as { label: string; icon: string; color: string }).icon ?? ''}
+                    onChange={(e) => updateSelectedNode({ icon: e.target.value })}
+                    placeholder="Icon"
+                    className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-20"
+                  />
+                  <select
+                    value={(selectedNode.data as { label: string; icon: string; color: string }).color ?? 'primary'}
+                    onChange={(e) => updateSelectedNode({ color: e.target.value })}
+                    className="bg-surface-container-high text-body-sm text-on-surface rounded px-sm py-0.5"
+                  >
+                    <option value="primary">primary</option>
+                    <option value="secondary">secondary</option>
+                    <option value="tertiary">tertiary</option>
+                  </select>
+                </div>
+                <button onClick={deleteSelectedNode} className="p-sm hover:bg-error-container hover:text-on-error-container rounded-full text-on-surface-variant transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+                <button onClick={() => setSelectedNodeId(null)} className="px-md py-sm rounded-lg border border-outline-variant text-on-surface-variant hover:text-on-surface transition-colors font-semibold">
+                  Deselect
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center bg-surface-container border border-outline-variant rounded-lg px-md py-1.5">
+                <input value={nodeLabel} onChange={(e) => setNodeLabel(e.target.value)} placeholder="Step label" className="bg-transparent outline-none text-body-sm text-on-surface placeholder:text-outline w-28" />
+                <button onClick={addNode} disabled={!nodeLabel.trim()} className="text-primary disabled:text-outline font-label-xs text-label-xs uppercase font-bold ml-sm">Add</button>
+              </div>
+            )}
             <button onClick={handleSave} className="flex items-center gap-sm px-md py-sm bg-surface-container hover:bg-surface-variant border border-outline-variant rounded-full text-on-surface-variant hover:text-on-surface transition-colors">
               <span className="material-symbols-outlined text-[18px]">save</span>
               <span className="font-label-xs text-label-xs uppercase hidden sm:inline">Save</span>
@@ -161,6 +222,8 @@ export default function Workflows() {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+              onPaneClick={() => setSelectedNodeId(null)}
               nodeTypes={nodeTypes}
               fitView
               proOptions={{ hideAttribution: true }}
