@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+env/
+venv/
+
+# Bridge virtualenv
+bridge/
+
+# Environment
+.env
+
+# Data
+data/
+
+# Generated reports
+testreport.md
+
+# OS
+.DS_Store

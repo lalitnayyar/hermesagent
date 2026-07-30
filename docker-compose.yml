@@ -1,0 +1,75 @@
+services:
+  agentflow-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: hermes-agentflow-backend:0.1.0
+    container_name: agentflow-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AGENTFLOW_DATABASE_URL: sqlite:////app/data/database/agentflow.db
+      HERMES_API_BASE_URL: ${HERMES_API_BASE_URL:-http://hermes-agent:8642}
+      HERMES_GATEWAY_URL: ${HERMES_GATEWAY_URL:-http://hermes-agent:9119}
+      HERMES_WORKSPACE_URL: ${HERMES_WORKSPACE_URL:-http://hermes-workspace:3000}
+    volumes:
+      - ./data/agentflow:/app/data
+    networks:
+      - ${HERMES_NETWORK:-hermes-network}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  agentflow-worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    image: hermes-agentflow-worker:0.1.0
+    container_name: agentflow-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AGENTFLOW_DATABASE_URL: sqlite:////app/data/database/agentflow.db
+      AGENTFLOW_BACKEND_URL: http://agentflow-backend:8080
+    volumes:
+      - ./data/agentflow:/app/data
+    depends_on:
+      agentflow-backend:
+        condition: service_healthy
+    networks:
+      - ${HERMES_NETWORK:-hermes-network}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://agentflow-backend:8080/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  agentflow-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hermes-agentflow-frontend:0.1.0
+    container_name: agentflow-frontend
+    restart: unless-stopped
+    ports:
+      - "${AGENTFLOW_FRONTEND_PORT:-3080}:80"
+    depends_on:
+      agentflow-backend:
+        condition: service_healthy
+    networks:
+      - ${HERMES_NETWORK:-hermes-network}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  hermes-network:
+    external: true
+    name: ${HERMES_NETWORK:-hermes-network}
