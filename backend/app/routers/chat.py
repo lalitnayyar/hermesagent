@@ -27,9 +27,9 @@ def _format_response(text: str, content_type: str) -> str:
 @router.post("/chat")
 def chat(payload: dict) -> dict:
     message = payload.get("message", "")
-    gateway = payload.get("gateway", settings.hermes_gateway_url).rstrip("/")
+    gateway = payload.get("gateway", settings.hermes_api_base_url).rstrip("/")
     gateway = gateway.replace("127.0.0.1:9119", "hermes-agent:9119").replace("127.0.0.1:8642", "hermes-agent:8642").replace("localhost:9119", "hermes-agent:9119").replace("localhost:8642", "hermes-agent:8642")
-    endpoint = payload.get("endpoint", "/chat").lstrip("/")
+    endpoint = payload.get("endpoint", "v1/chat/completions").lstrip("/")
     timeout = payload.get("timeout", 30)
 
     if not message:
@@ -46,10 +46,19 @@ def chat(payload: dict) -> dict:
     elif settings.hermes_api_server_key:
         headers["Authorization"] = f"Bearer {settings.hermes_api_server_key}"
 
+    if "v1/chat/completions" in endpoint:
+        body = {
+            "model": payload.get("model", "hermes-agent"),
+            "messages": [{"role": "user", "content": message}],
+            "stream": False,
+        }
+    else:
+        body = {"message": message}
+
     try:
         with httpx.Client(timeout=timeout, verify=False, follow_redirects=True) as client:
-            resp = client.post(url, json={"message": message}, headers=headers, auth=auth)
-            body = _format_response(resp.text, resp.headers.get("content-type", ""))
-            return {"status": resp.status_code, "body": body}
+            resp = client.post(url, json=body, headers=headers, auth=auth)
+            response_text = _format_response(resp.text, resp.headers.get("content-type", ""))
+            return {"status": resp.status_code, "body": response_text}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Chat request failed: {e}")

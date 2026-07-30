@@ -6,8 +6,8 @@ import { useAppStore } from '@/lib/store'
 export default function ChatTest() {
   const { settings } = useAppStore()
   const [message, setMessage] = useState('capital of india')
-  const [gateway, setGateway] = useState(settings.gateway || 'http://hermes-agent:9119')
-  const [endpoint, setEndpoint] = useState('/chat')
+  const [gateway, setGateway] = useState(settings.hermesApi || 'http://hermes-agent:8642')
+  const [endpoint, setEndpoint] = useState('/v1/chat/completions')
   const [username, setUsername] = useState(settings.hermesUsername || '')
   const [password, setPassword] = useState(settings.hermesPassword || '')
   const [ollamaHost, setOllamaHost] = useState(settings.ollamaHost || 'http://host.docker.internal:11434')
@@ -52,7 +52,7 @@ export default function ChatTest() {
       <h2 className="font-headline-md text-headline-md text-on-surface">Hermes / Ollama Chat Test</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
         <div className="space-y-sm">
-          <label className="text-label-sm text-on-surface-variant">Hermes Gateway URL</label>
+          <label className="text-label-sm text-on-surface-variant">Hermes API URL</label>
           <input
             type="text"
             value={gateway}
