@@ -8,6 +8,8 @@ export default function ChatTest() {
   const [message, setMessage] = useState('capital of india')
   const [gateway, setGateway] = useState(settings.gateway || 'http://hermes-agent:9119')
   const [endpoint, setEndpoint] = useState('/chat')
+  const [username, setUsername] = useState(settings.hermesUsername || '')
+  const [password, setPassword] = useState(settings.hermesPassword || '')
   const [ollamaHost, setOllamaHost] = useState(settings.ollamaHost || 'http://host.docker.internal:11434')
   const [model, setModel] = useState('gemma4:cloud')
   const [result, setResult] = useState('')
@@ -21,8 +23,8 @@ export default function ChatTest() {
         message,
         gateway,
         endpoint,
-        username: settings.hermesUsername,
-        password: settings.hermesPassword
+        username,
+        password
       })
       setResult(`Status: ${data.status}\n\n${data.body}`)
     } catch (err: any) {
@@ -64,6 +66,26 @@ export default function ChatTest() {
             type="text"
             value={endpoint}
             onChange={(e) => setEndpoint(e.target.value)}
+            className="w-full bg-surface-container-high border border-outline-variant rounded-lg px-md py-sm text-on-surface"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+        <div className="space-y-sm">
+          <label className="text-label-sm text-on-surface-variant">Hermes Username</label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full bg-surface-container-high border border-outline-variant rounded-lg px-md py-sm text-on-surface"
+          />
+        </div>
+        <div className="space-y-sm">
+          <label className="text-label-sm text-on-surface-variant">Hermes Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-surface-container-high border border-outline-variant rounded-lg px-md py-sm text-on-surface"
           />
         </div>
