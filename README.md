@@ -58,6 +58,111 @@ behind a beautiful, dark-themed, production-ready UI.
 
 ---
 
+## Operational Flow
+
+```mermaid
+flowchart TD
+    A[User opens Hermes Studio in browser] --> B[Nginx serves the React PWA]
+    B --> C[FastAPI Backend]
+    C --> D[(SQLite Database)]
+    C --> E[Hermes Agent API<br/>http://hermes-agent:8642]
+    C --> F[Ollama on host<br/>http://host.docker.internal:11434]
+    C --> G[Activity Logs &<br/>Monitoring]
+
+    H[manage.sh / manage-containers.sh] --> I[Docker Compose]
+    I --> J[agentflow-frontend]
+    I --> K[agentflow-backend]
+    I --> L[hermes-agent]
+
+    subgraph User Interaction
+        B
+    end
+
+    subgraph Backend Services
+        C
+        D
+        G
+    end
+
+    subgraph External/Optional
+        E
+        F
+    end
+```
+
+### How a chat request flows
+
+1. User types a message in **Chat Test** and clicks **Send to Hermes**.
+2. Frontend posts to `/api/chat` with the Hermes API URL, endpoint,
+   username/password, and message.
+3. Backend builds the OpenAI-compatible `messages` payload and adds
+   `Authorization: Bearer <HERMES_API_SERVER_KEY>`.
+4. Backend forwards the request to `http://hermes-agent:8642/v1/chat/completions`.
+5. Hermes Agent processes the request and returns a `chat.completion` JSON.
+6. Backend extracts the assistant content, model, and token usage and returns
+   formatted text to the frontend.
+
+### How a workflow runs
+
+1. User drags blocks onto the **Workflows** canvas.
+2. Tool blocks capture a name and code/command.
+3. Output blocks store a target result.
+4. User clicks **Run**; the backend traces the graph from Start to Output/End.
+5. The trace is written to the first Output block and shown in the test output
+   panel.
+6. User clicks **Save** to persist the workflow, or **Publish** to mark it live.
+
+### How AgentFlow connects to Ollama
+
+1. Ollama is started on the host with `OLLAMA_HOST=0.0.0.0:11434`.
+2. AgentFlow backend resolves `host.docker.internal:11434` via the
+   `host.docker.internal:host-gateway` mapping.
+3. **Chat Test** or **Settings → Ollama Test** POSTs to `/api/ollama` with the
+   host and model.
+4. Backend calls `http://host.docker.internal:11434/api/generate` and returns
+   the model response.
+
+---
+
+## Screenshots
+
+> Place captured screenshots in `assets/screenshots/` and update the paths below.
+
+### Dashboard
+![Dashboard](assets/screenshots/dashboard.png)
+
+### Agents
+![Agents](assets/screenshots/agents.png)
+
+### Workflows
+![Workflows](assets/screenshots/workflows.png)
+
+### Tasks
+![Tasks](assets/screenshots/tasks.png)
+
+### Approvals
+![Approvals](assets/screenshots/approvals.png)
+
+### Automation
+![Automation](assets/screenshots/automation.png)
+
+### Monitor
+![Monitor](assets/screenshots/monitor.png)
+
+### Chat Test
+![Chat Test](assets/screenshots/chat-test.png)
+
+### Settings
+![Settings](assets/screenshots/settings.png)
+
+### Logs
+![Logs](assets/screenshots/logs.png)
+
+### Mobile Companion
+![Mobile Companion](assets/screenshots/mobile.png)
+
+---
+
 ## Tech Stack
 
 - Vite + React 18 + TypeScript
